@@ -191,7 +191,7 @@ export function SignInSignUp({ checkCredentials, createUser, newPassword, onDone
           disabled={waiting || !userName || !password || !!authResult}
           onClick={ () => checkCredentials(userName, password).then( r => {
             dispatch({ type: 'SET_AUTHRESULT', authResult: r });
-            if(r.result == 'SUCCESS'){location.reload()}
+            if(r.result == 'SUCCESS'){location.reload()} //Костыль
           } ) }
         >
           Login

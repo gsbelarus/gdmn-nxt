@@ -9,7 +9,7 @@ import { Strategy } from 'passport-local';
 import { FileDB } from '@gsbelarus/util-helpers';
 import { checkEmailAddress, genRandomPassword } from '@gsbelarus/util-useful';
 import { authResult } from '@gsbelarus/util-api-types';
-import { getReconciliationStatement } from './app/app';
+import { checkGedeminUser, getReconciliationStatement } from './app/app';
 
 const MemoryStore = require('memorystore')(session);
 
@@ -43,8 +43,8 @@ const purgeExpiredUsers = async () => {
   let changed = false;
   const data = await userDB.getMutable(false);
   for (const k of Object.keys(data)) {
-    if (data[ k ].expireOn < Date.now()) {
-      delete data[ k ];
+    if (data[k].expireOn < Date.now()) {
+      delete data[k];
       changed = true;
     }
   }
@@ -119,6 +119,7 @@ app.get('/api', (_, res) => {
 
 app.get('/user', (req, res) => {
   console.log(req.user);
+  console.log(req.session)
   req.isAuthenticated() ?
     res.json(req.user)
     :
@@ -215,9 +216,7 @@ app.route('/api/v1/user/signin')
     async (req, res, next) => {
       const { userName, password, employeeMode } = req.body;
 
-
       /*
-
         если это сотрудник, то проверять мы должны в базе гедымина
         если нет, то проверяем в нашем JSON
 
@@ -226,33 +225,37 @@ app.route('/api/v1/user/signin')
 
         если в JSON не записываем, то тогда везде надо проверять и
         на JSON и из базы.
-
       */
 
+      if (employeeMode) {
+        const tm = checkGedeminUser(userName, password);
+        if((await tm).result !== 'SUCCESS'){
+          return res.json(authResult((await tm).result, 'WRONG'  ))
+        }
+        next();
+      } else {
+        /*  1. проверим входные параметры на корректность  */
+        if (typeof userName !== 'string' || typeof password !== 'string') {
+          return res.json(authResult('INVALID_DATA', 'Invalid data.'));
+        }
 
-      /*  1. проверим входные параметры на корректность  */
+        /* 2. Очистим БД от устаревших записей */
 
-      if (typeof userName !== 'string' || typeof password !== 'string') {
-        return res.json(authResult('INVALID_DATA', 'Invalid data.'));
+        await purgeExpiredUsers();
+        /* 3. ищем пользователя */
+        const un = userName.toLowerCase();
+        const user = await userDB.findOne(u => u.userName.toLowerCase() === un);
+
+        if (!user) {
+          return res.json(authResult('UNKNOWN_USER', `User name ${userName} not found.`));
+        };
+
+        /*4. Проверка пароля */
+        if (!validPassword(password, user.hash, user.salt)) {
+          return res.json(authResult('INVALID_PASSWORD', `Wrong password`)); // Убрать после обработки пасспорта P.S. Костыль
+        }
+        next();
       }
-
-      /* 2. Очистим БД от устаревших записей */
-
-      await purgeExpiredUsers();
-      /* 3. ищем пользователя */
-      const un = userName.toLowerCase();
-      const user = await userDB.findOne(u => u.userName.toLowerCase() === un);
-
-      if (!user) {
-        return res.json(authResult('UNKNOWN_USER', `User name ${userName} not found.`));
-      };
-
-      /*4. Проверка пароля */
-      if (!validPassword(password, user.hash, user.salt)) {
-        return res.json(authResult('INVALID_PASSWORD', `Wrong password`)); // Убрать после обработки пасспорта P.S. Костыль
-      }
-      next();
-
     },
     passport.authenticate('local', {}),
     async (req, res) => {
