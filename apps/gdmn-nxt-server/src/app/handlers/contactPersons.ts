@@ -150,7 +150,7 @@ const get: RequestHandler = async (req, res) => {
 };
 
 const upsert: RequestHandler = async (req, res) => {
-  const { attachment, transaction, releaseTransaction, fetchAsObject } = await startTransaction(req.sessionID);
+  const { attachment, transaction, releaseTransaction, fetchAsObject, executeSingletonAsObject } = await startTransaction(req.sessionID);
 
   const { id } = req.params;
 
@@ -226,13 +226,12 @@ const upsert: RequestHandler = async (req, res) => {
     const paramsString = actualFields.map(field => ':' + field).join(',');
     const returnFieldsNames = allFields.join(',');
 
-    const sqlResultFolder = await fetchAsObject(`
+    const sqlResultFolder = await executeSingletonAsObject(`
       UPDATE OR INSERT INTO GD_CONTACT(NAME, PARENT, CONTACTTYPE)
       VALUES(:NAME, :PARENT, 4)
       MATCHING(NAME, PARENT)
       RETURNING ID`, { NAME: 'Контакты', PARENT: req.body['WCOMPANYKEY'] });
 
-    sql.clear();
     sql.SQLtext = `
       UPDATE OR INSERT INTO GD_CONTACT(${actualFieldsNames}, PARENT, CONTACTTYPE)
       VALUES (${paramsString}, :PARENT, :CONTACTTYPE)
