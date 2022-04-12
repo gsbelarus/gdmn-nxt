@@ -2,12 +2,11 @@ import { IPhone, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { importedModels } from '../models';
 import { resultError } from '../responseMessages';
-import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction, startTransaction } from '../utils/db-connection';
 import { genId } from '../utils/genId';
-import { sqlQuery } from '../utils/sqlQuery';
 
 const getByCutomerId: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await getReadTransaction(req.sessionID);
+  const { executeQuery } = await getReadTransaction(req.sessionID);
 
   try {
     const customerId = parseInt(req.params.customerId);
