@@ -2,7 +2,7 @@ import { IPhone, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { importedModels } from '../models';
 import { resultError } from '../responseMessages';
-import { commitTransaction, getReadTransaction, releaseReadTransaction, rollbackTransaction, startTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../utils/db-connection';
 import { genId } from '../utils/genId';
 import { sqlQuery } from '../utils/sqlQuery';
 
@@ -176,7 +176,7 @@ const get: RequestHandler = async (req, res) => {
 };
 
 const upsert: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await startTransaction(req.sessionID);
+  const { attachment, transaction, releaseTransaction } = await startTransaction(req.sessionID);
 
   const { id } = req.params;
 
@@ -362,15 +362,15 @@ const upsert: RequestHandler = async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
-    await rollbackTransaction(req.sessionID, transaction);
+    await releaseTransaction(false);
     return res.status(500).send(resultError(error.message));
   } finally {
-    await commitTransaction(req.sessionID, transaction);
+    await releaseTransaction();
   };
 };
 
 const remove: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await startTransaction(req.sessionID);
+  const { attachment, transaction, releaseTransaction } = await startTransaction(req.sessionID);
 
   const id = parseInt(req.params.id);
 
@@ -405,7 +405,7 @@ const remove: RequestHandler = async (req, res) => {
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await commitTransaction(req.sessionID, transaction);
+    await releaseTransaction();
   };
 };
 

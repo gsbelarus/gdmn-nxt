@@ -1,14 +1,13 @@
-import { IEntities, IKanbanCard, IKanbanColumn, IRequestResult } from '@gsbelarus/util-api-types';
+import { IKanbanCard, IKanbanColumn, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { ResultSet } from 'node-firebird-driver-native';
-import { importModels } from '../er/er-utils';
 import { resultError } from '../responseMessages';
-import { commitTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../utils/db-connection';
+import { getReadTransaction, startTransaction } from '../utils/db-connection';
 
 const get: RequestHandler = async (req, res) => {
   const { mode } = req.params;
 
-  const { attachment, transaction } = await getReadTransaction(req.sessionID);
+  const { releaseReadTransaction, executeQuery } = await getReadTransaction(req.sessionID);
 
   // let cardsData = '';
   // switch (mode) {
@@ -28,19 +27,16 @@ const get: RequestHandler = async (req, res) => {
     let actualFields = ['ID', 'USR$INDEX', 'USR$NAME'];
     let actualFieldsNames = actualFields.join(',');
 
-    const columnsResultSet = await attachment.executeQuery(
-      transaction,
+    const columnsResultSet = await executeQuery(
       `SELECT ${actualFieldsNames}
       FROM USR$CRM_KANBAN_COLUMNS
       ORDER BY USR$INDEX`
     );
 
-
     let cardsResultSet;
     switch (mode) {
     case 'deals':
-      cardsResultSet = await attachment.executeQuery(
-        transaction,
+      cardsResultSet = await executeQuery(
         `SELECT
             card.ID, COALESCE(card.USR$INDEX, 0) USR$INDEX, card.USR$MASTERKEY,
             card.USR$DEALKEY, deal.ID deal_ID, deal.USR$NAME deal_USR$NAME, deal.USR$DISABLED deal_USR$DISABLED, deal.USR$AMOUNT deal_USR$AMOUNT, deal.USR$CONTACTKEY deal_USR$CONTACTKEY,
@@ -57,8 +53,7 @@ const get: RequestHandler = async (req, res) => {
       actualFields = ['ID', 'USR$MASTERKEY', 'USR$INDEX', 'USR$DEALKEY'];
       actualFieldsNames = actualFields.join(',');
 
-      cardsResultSet = await attachment.executeQuery(
-        transaction,
+      cardsResultSet = await executeQuery(
         `SELECT ${actualFieldsNames}
           FROM USR$CRM_KANBAN_CARDS card
           ORDER BY USR$INDEX`
@@ -149,12 +144,12 @@ const get: RequestHandler = async (req, res) => {
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await releaseReadTransaction(req.sessionID);
+    await releaseReadTransaction();
   };
 };
 
 const reorderColumns: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await startTransaction(req.sessionID);
+  const { transaction, releaseTransaction, executeSingletonAsObject } = await startTransaction(req.sessionID);
 
   try {
     // const erModelFull = importERModel('TgdcDepartment');
@@ -185,7 +180,7 @@ const reorderColumns: RequestHandler = async (req, res) => {
         return column[field];
       });
 
-      return (await attachment.executeSingletonAsObject(transaction, sql, paramsValues));
+      return (await executeSingletonAsObject(sql, paramsValues));
     });
 
     const records = await Promise.all(unresolvedPromises);
@@ -197,18 +192,18 @@ const reorderColumns: RequestHandler = async (req, res) => {
       _schema: undefined
     };
 
-    await commitTransaction(req.sessionID, transaction);
+    await transaction.commit();
 
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await releaseTransaction(req.sessionID, transaction);
+    await releaseTransaction();
   };
 };
 
 const reorderCards: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await startTransaction(req.sessionID);
+  const { transaction, releaseTransaction, executeSingletonAsObject } = await startTransaction(req.sessionID);
 
   try {
     // const erModelFull = importERModel('TgdcDepartment');
@@ -239,7 +234,7 @@ const reorderCards: RequestHandler = async (req, res) => {
         return card[field];
       });
 
-      return (await attachment.executeSingletonAsObject(transaction, sql, paramsValues));
+      return (await executeSingletonAsObject(sql, paramsValues));
     });
 
     const records = await Promise.all(unresolvedPromises);
@@ -251,11 +246,13 @@ const reorderCards: RequestHandler = async (req, res) => {
       _schema: undefined
     };
 
+    await transaction.commit();
+
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await commitTransaction(req.sessionID, transaction);
+    await releaseTransaction();
   };
 };
 

@@ -2,11 +2,11 @@ import { IAccount, IAccountWithID, IDataSchema, IRequestResult, IWithID } from "
 import { genPassword } from "@gsbelarus/util-helpers";
 import { genRandomPassword } from "@gsbelarus/util-useful";
 import { RequestHandler } from "express";
-import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from "./utils/db-connection";
+import { getReadTransaction, startTransaction } from "./utils/db-connection";
 import { sendEmail } from "./mail";
 
 export const upsertAccount: RequestHandler = async (req, res) => {
-  const { attachment, transaction} = await startTransaction(req.sessionID);
+  const { transaction, releaseTransaction, executeQuery, executeSingleton } = await startTransaction(req.sessionID);
   try {
     let ID: number;
     let insert: boolean;  // we know that this is an insert of a new account by the absence of the ID field
@@ -15,7 +15,7 @@ export const upsertAccount: RequestHandler = async (req, res) => {
       ID = parseInt(req.params['ID']);
       insert = false;
     } else {
-      const rs = await attachment.executeQuery(transaction, 'SELECT id FROM gd_p_getnextid');
+      const rs = await executeQuery('SELECT id FROM gd_p_getnextid');
       try {
         ID = (await rs.fetchAsObject<IWithID>())[0].ID;
         insert = true;
@@ -30,7 +30,7 @@ export const upsertAccount: RequestHandler = async (req, res) => {
     if (insert) {
       newCredentials = approvalSet;
     } else {
-      const rs = await attachment.executeQuery(transaction, 'SELECT usr$approved FROM usr$crm_account WHERE id = ?', [ID]);
+      const rs = await executeQuery('SELECT usr$approved FROM usr$crm_account WHERE id = :ID', { ID });
       try {
         const res = await rs.fetchAsObject<Pick<IAccount, 'USR$APPROVED'>>();
         const approvalWas = !!res[0]?.USR$APPROVED;
@@ -95,7 +95,7 @@ export const upsertAccount: RequestHandler = async (req, res) => {
 
     const sql = `UPDATE OR INSERT INTO usr$crm_account (${actualFieldsNames}) VALUES (${paramsString}) MATCHING (ID) RETURNING ${allFieldsNames}`;
 
-    const row = await attachment.executeSingleton(transaction, sql, params);
+    const row = await executeSingleton(sql, params);
     await transaction.commit();
 
     const result: IRequestResult<{ accounts: IAccountWithID[] }> = {
@@ -144,12 +144,12 @@ export const upsertAccount: RequestHandler = async (req, res) => {
     res.sendStatus(500);
   }
   finally {
-    await releaseTransaction(req.sessionID, transaction);
+    await releaseTransaction();
   }
 };
 
 export const getAccounts: RequestHandler = async (req, res) => {
-  const { attachment, transaction} = await getReadTransaction(req.sessionID);
+  const { releaseReadTransaction, executeQuery } = await getReadTransaction(req.sessionID);
 
   try {
     const _schema: IDataSchema = {
@@ -164,7 +164,7 @@ export const getAccounts: RequestHandler = async (req, res) => {
     };
 
     const execQuery = async ({ name, query, params }: { name: string, query: string, params?: any[] }) => {
-      const rs = await attachment.executeQuery(transaction, query, params);
+      const rs = await executeQuery(query, params);
       try {
         const data = await rs.fetchAsObject();
         const sch = _schema[name];
@@ -227,6 +227,6 @@ export const getAccounts: RequestHandler = async (req, res) => {
 
     return res.json(result);
   } finally {
-    await releaseReadTransaction(req.sessionID);
+    await releaseReadTransaction();
   }
 };

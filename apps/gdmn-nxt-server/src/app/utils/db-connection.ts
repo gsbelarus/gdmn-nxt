@@ -1,3 +1,4 @@
+import { wrapForNamedParams } from '@gsbelarus/util-helpers';
 import { Semaphore } from '@gsbelarus/util-useful';
 import { Client, Attachment, createNativeClient, getDefaultLibraryFilename, Transaction, TransactionIsolation } from 'node-firebird-driver-native';
 import { config } from "./db-config";
@@ -146,7 +147,33 @@ export const getReadTransaction = async (sessionId: string) => {
         });
       }
     }
-    return { attachment: dbSession.attachment, transaction: dbSession.readTransaction };
+
+    const releaseReadTransaction = async () => {
+      await semaphore.acquire();
+      try {
+        const dbSession = sessions[sessionId];
+
+        if (!dbSession?.readTransaction?.isValid) {
+          throw new Error(`No active read transaction in session ${sessionId}`);
+        }
+
+        if (dbSession?.lock < 1) {
+          throw new Error(`Db session ${sessionId} is not locked`);
+        }
+
+        dbSession.lock -= 1;
+        dbSession.touched = new Date().getTime();
+      } finally {
+        semaphore.release();
+      }
+    };
+
+    return {
+      attachment: dbSession.attachment,
+      transaction: dbSession.readTransaction,
+      releaseReadTransaction,
+      ...wrapForNamedParams(dbSession.attachment, dbSession.readTransaction)
+    };
   } finally {
     semaphore.release();
   }
@@ -179,26 +206,33 @@ export const startTransaction = async (sessionId: string) => {
     readCommittedMode: 'RECORD_VERSION',
     waitMode: 'NO_WAIT'
   });
-  return { attachment, transaction };
+
+  const releaseTransaction = async (commit = true) => {
+    if (transaction.isValid) {
+      if (commit) {
+        await transaction.commit();
+      } else {
+        await transaction.rollback();
+      }
+    }
+    await releaseAttachment(sessionId);
+  };
+
+  return {
+    attachment,
+    transaction,
+    releaseTransaction,
+    ...wrapForNamedParams(attachment, transaction)
+  };
 };
 
-export const releaseTransaction = async (sessionId: string, transaction: Transaction) => {
+export const releaseTransaction = async (sessionId: string, transaction: Transaction, commit = true) => {
   if (transaction.isValid) {
-    await transaction.commit();
-  }
-  await releaseAttachment(sessionId);
-};
-
-export const commitTransaction = async (sessionId: string, transaction: Transaction) => {
-  if (transaction.isValid) {
-    await transaction.commit();
-  }
-  await releaseAttachment(sessionId);
-};
-
-export const rollbackTransaction = async (sessionId: string, transaction: Transaction) => {
-  if (transaction.isValid) {
-    await transaction.rollback();
+    if (commit) {
+      await transaction.commit();
+    } else {
+      await transaction.rollback();
+    }
   }
   await releaseAttachment(sessionId);
 };

@@ -3,11 +3,11 @@ import { RequestHandler } from 'express';
 import { ResultSet } from 'node-firebird-driver-native';
 import { importModels } from '../er/er-utils';
 import { resultError } from '../responseMessages';
-import { commitTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction, startTransaction } from '../utils/db-connection';
 import { genId } from '../utils/genId';
 
 const get: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await getReadTransaction(req.sessionID);
+  const { attachment, transaction, releaseReadTransaction } = await getReadTransaction(req.sessionID);
 
   const { id } = req.params;
 
@@ -56,18 +56,18 @@ const get: RequestHandler = async (req, res) => {
       _schema
     };
 
-    await commitTransaction(req.sessionID, transaction);
+    await releaseReadTransaction();
 
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await releaseReadTransaction(req.sessionID);
+    await releaseReadTransaction();
   };
 };
 
 const upsert: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await startTransaction(req.sessionID);
+  const { attachment, transaction, releaseTransaction } = await startTransaction(req.sessionID);
 
   const { id } = req.params;
 
@@ -179,19 +179,19 @@ const upsert: RequestHandler = async (req, res) => {
     };
 
     await transaction.commit();
-
+    //TODO: а почему здесь транзакция не высвобождается???
     // await commitTransaction(req.sessionID, transaction);
 
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await releaseTransaction(req.sessionID, transaction);
+    await releaseTransaction();
   };
 };
 
 const remove: RequestHandler = async(req, res) => {
-  const { attachment, transaction } = await startTransaction(req.sessionID);
+  const { releaseTransaction, executeQuery } = await startTransaction(req.sessionID);
 
   const { id } = req.params;
 
@@ -199,8 +199,7 @@ const remove: RequestHandler = async(req, res) => {
 
   let result: ResultSet;
   try {
-    result = await attachment.executeQuery(
-      transaction,
+    result = await executeQuery(
       `EXECUTE BLOCK(
         ID INTEGER = ?
       )
@@ -230,12 +229,12 @@ const remove: RequestHandler = async(req, res) => {
     };
 
     await result.close();
-    await commitTransaction(req.sessionID, transaction);
+    await releaseTransaction();
     return res.status(200).json({ 'ID': id, 'USR$MASTERKEY': data[0].USR$MASTERKEY });
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await releaseTransaction(req.sessionID, transaction);
+    await releaseTransaction();
   };
 };
 
