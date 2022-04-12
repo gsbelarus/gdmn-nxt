@@ -6,29 +6,20 @@ import { getReadTransaction, releaseReadTransaction, startTransaction } from '..
 import { genId } from '../utils/genId';
 
 const getByCutomerId: RequestHandler = async (req, res) => {
-  const { executeQuery } = await getReadTransaction(req.sessionID);
+  const { releaseReadTransaction, fetchAsObject } = await getReadTransaction(req.sessionID);
 
   try {
     const customerId = parseInt(req.params.customerId);
-
-    const sql = new sqlQuery(attachment, transaction);
-    sql.SQLtext = `
+    let sqlResult = await fetchAsObject(`
       SELECT ID FROM GD_CONTACT
-      WHERE UPPER(NAME) = 'КОНТАКТЫ' AND PARENT = :CompanyId`;
-    sql.setParamByName('CompanyId').value = customerId;
+      WHERE UPPER(NAME) = 'КОНТАКТЫ' AND PARENT = :customerId`, { customerId })
 
-    let sqlResult = await sql.execute();
-
-    const contactFolderId = sqlResult.length ? sqlResult[0]['ID'] : -1;
-
-    sql.clear();
-    sql.SQLtext = `
+    const folderId = sqlResult.length ? sqlResult[0]['ID'] : -1;
+    sqlResult = await fetchAsObject( `
       SELECT dep.ID, dep.NAME
       FROM GD_CONTACT con
       JOIN GD_CONTACT dep ON dep.ID = con.USR$BG_OTDEL
-      WHERE con.PARENT = :FolderId`;
-    sql.setParamByName('FolderId').value = contactFolderId;
-    sqlResult = await sql.execute();
+      WHERE con.PARENT = :folderId`, { folderId });
 
     interface IMapOfObjects {
       [key: string]: any;
@@ -41,12 +32,9 @@ const getByCutomerId: RequestHandler = async (req, res) => {
       };
     });
 
-    sql.clear();
-    sql.SQLtext = `
+    sqlResult = await fetchAsObject(`
       SELECT USR$CONTACTKEY, ID, USR$PHONENUMBER
-      FROM USR$CRM_PHONES`;
-
-    sqlResult = await sql.execute();
+      FROM USR$CRM_PHONES`);
 
     interface IMapOfArray {
       [key: string]: any[];
@@ -65,17 +53,14 @@ const getByCutomerId: RequestHandler = async (req, res) => {
     // const allFields = erModelNoAdapters.entities['TgdcContact'].attributes.map(attr => attr.name);
     // const actualFieldsNames = allFields.join(',');
 
-    sql.clear();
-    sql.SQLtext = `
+    sqlResult = await fetchAsObject(`
       SELECT
         ID, PARENT, NAME, EMAIL, p.RANK, CAST(c.NOTE AS VARCHAR(1024)) AS NOTE,
         ADDRESS, USR$BG_OTDEL AS USR$BG_OTDEL, p.USR$LETTER_OF_AUTHORITY, p.WCOMPANYKEY
       FROM GD_CONTACT c
       JOIN GD_PEOPLE p ON p.CONTACTKEY = c.ID
-      WHERE PARENT = :FolderId
-      ORDER BY ID DESC`;
-    sql.setParamByName('FolderId').value = contactFolderId;
-    sqlResult = await sql.execute();
+      WHERE PARENT = :folderId
+      ORDER BY ID DESC`, { folderId });
 
     sqlResult.forEach(res => {
       res['USR$BG_OTDEL'] = departments[res['USR$BG_OTDEL']];
@@ -92,24 +77,20 @@ const getByCutomerId: RequestHandler = async (req, res) => {
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await releaseReadTransaction(req.sessionID);
+    await releaseReadTransaction();
   };
 };
 
 const get: RequestHandler = async (req, res) => {
-  const { attachment, transaction } = await getReadTransaction(req.sessionID);
+  const { releaseReadTransaction, fetchAsObject } = await getReadTransaction(req.sessionID);
 
   try {
     const id = parseInt(req.params.id);
-
-    const sql = new sqlQuery(attachment, transaction);
-    sql.SQLtext = `
+    let sqlResult = await fetchAsObject(`
       SELECT dep.ID, dep.NAME
       FROM GD_CONTACT con
       JOIN GD_CONTACT dep ON dep.ID = con.USR$BG_OTDEL
-      WHERE con.ID = :id`;
-    sql.setParamByName('id').value = id;
-    let sqlResult = await sql.execute();
+      WHERE con.ID = :id`, { id });
 
     interface IMapOfObjects {
       [key: string]: any;
@@ -122,12 +103,9 @@ const get: RequestHandler = async (req, res) => {
       };
     });
 
-    sql.clear();
-    sql.SQLtext = `
+    sqlResult = await fetchAsObject(`
       SELECT USR$CONTACTKEY, ID, USR$PHONENUMBER
-      FROM USR$CRM_PHONES`;
-
-    sqlResult = await sql.execute();
+      FROM USR$CRM_PHONES`);
 
     interface IMapOfArray {
       [key: string]: any[];
@@ -146,14 +124,11 @@ const get: RequestHandler = async (req, res) => {
     // const allFields = erModelNoAdapters.entities['TgdcContact'].attributes.map(attr => attr.name);
     // const actualFieldsNames = allFields.join(',');
 
-    sql.clear();
-    sql.SQLtext = `
+    sqlResult = await fetchAsObject(`
       SELECT ID, NAME, EMAIL, p.RANK, CAST(c.NOTE AS VARCHAR(1024)) AS NOTE, ADDRESS, USR$BG_OTDEL AS BG_OTDEL
       FROM GD_CONTACT c
       JOIN GD_PEOPLE p ON p.CONTACTKEY = c.ID
-      WHERE ID = :id`;
-    sql.setParamByName('id').value = id;
-    sqlResult = await sql.execute();
+      WHERE ID = :id`, { id });
 
     sqlResult.forEach(res => {
       res['USR$BG_OTDEL'] = departments[res['USR$BG_OTDEL']];
@@ -170,12 +145,12 @@ const get: RequestHandler = async (req, res) => {
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {
-    await releaseReadTransaction(req.sessionID);
+    await releaseReadTransaction();
   };
 };
 
 const upsert: RequestHandler = async (req, res) => {
-  const { attachment, transaction, releaseTransaction } = await startTransaction(req.sessionID);
+  const { attachment, transaction, releaseTransaction, fetchAsObject } = await startTransaction(req.sessionID);
 
   const { id } = req.params;
 
@@ -251,15 +226,11 @@ const upsert: RequestHandler = async (req, res) => {
     const paramsString = actualFields.map(field => ':' + field).join(',');
     const returnFieldsNames = allFields.join(',');
 
-    const sql = new sqlQuery(attachment, transaction);
-    sql.SQLtext = `
+    const sqlResultFolder = await fetchAsObject(`
       UPDATE OR INSERT INTO GD_CONTACT(NAME, PARENT, CONTACTTYPE)
       VALUES(:NAME, :PARENT, 4)
       MATCHING(NAME, PARENT)
-      RETURNING ID`;
-    sql.setParamByName('NAME').value = 'Контакты';
-    sql.setParamByName('PARENT').value = req.body['WCOMPANYKEY'];
-    const sqlResultFolder = await sql.execute();
+      RETURNING ID`, { NAME: 'Контакты', PARENT: req.body['WCOMPANYKEY'] });
 
     sql.clear();
     sql.SQLtext = `
