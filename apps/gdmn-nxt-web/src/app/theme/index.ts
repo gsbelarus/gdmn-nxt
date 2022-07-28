@@ -1,4 +1,5 @@
 import { colors } from '@mui/material';
+import * as locales from '@mui/material/locale';
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 import { ICustomization } from '../store/settingsSlice';
 import componentStyleOverrides from './componentStyleOverrides';
@@ -62,9 +63,9 @@ export const theme = (customization: ICustomization) => {
     },
   };
 
-  const themes = createTheme(themeOptions);
+  const themes = createTheme(themeOptions, locales.ruRU);
   themes.typography = { ...themes.typography, ...themeTypography(themeOptions) };
-  themes.components = componentStyleOverrides(themeOptions);
+  themes.components = { ...locales.ruRU.components, ...componentStyleOverrides(themeOptions) };
   themes.shadows[1] = '0px 4px 20px rgba(170, 180, 190, 0.3)';
 
   return themes;

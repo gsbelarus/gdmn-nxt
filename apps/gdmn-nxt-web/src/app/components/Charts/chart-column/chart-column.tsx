@@ -2,17 +2,18 @@ import './chart-column.module.less';
 import ApexCharts from 'apexcharts';
 import Chart from 'react-apexcharts';
 import CustomizedCard from '../../customized-card/customized-card';
-import { Autocomplete, Checkbox, MenuItem, Stack, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
-import { useState } from 'react';
-import { useGetSumByPeriodQuery } from '../../../features/charts/chartDataApi';
+import { Autocomplete, Checkbox, createFilterOptions, Grid, MenuItem, Stack, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { IChartFilter, useGetSumByPeriodQuery } from '../../../features/charts/chartDataApi';
 import { useGetDepartmentsQuery } from '../../../features/departments/departmentsApi';
-import { IContactWithID } from '@gsbelarus/util-api-types';
+import { IContactWithID, ICustomerContractWithID, IWorkType } from '@gsbelarus/util-api-types';
 import { Box } from '@mui/system';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import ChartSkeleton from '../chart-skeleton/chart-skeleton';
 import LinearIndeterminate from '../../linear-indeterminate/linear-indeterminate';
-
+import { useGetWorkTypesQuery } from '../../../features/work-types/workTypesApi';
+import { useGetCustomerContractsQuery } from '../../../features/customer-contracts/customerContractsApi';
 interface IPeriodType {
   id: number;
   value: string;
@@ -44,6 +45,33 @@ const generateArrayOfYears = () => {
 
 const years = generateArrayOfYears();
 
+// interface IChartFilter {
+//   [key: string]: any
+// };
+
+interface IMapOfArrays {
+  [key: string]: number;
+};
+
+interface IMapOfChartData {
+  [key: string]: IMapOfArrays;
+};
+
+const filterOptions = createFilterOptions({
+  matchFrom: 'any',
+  limit: 50,
+  stringify: (option: any) => option['USR$NAME'] || option['NAME'],
+});
+
+interface IAnalyticsDataParams {
+  dateBegin: number,
+  dateEnd: number,
+  departments?: IContactWithID[],
+  workTypes?: IWorkType[]
+  contracts?: ICustomerContractWithID[]
+};
+
+
 /* eslint-disable-next-line */
 export interface ChartColumnProps {}
 
@@ -51,21 +79,15 @@ export function ChartColumn(props: ChartColumnProps) {
   const theme = useTheme();
   const [periodType, setPeriodType] = useState<IPeriodType | undefined>(periods[0]);
   const [activeYears, setActiveYears] = useState<number[]>(years.slice(years.length - 2));
-  const [department, setDepartment] = useState<IContactWithID | null>();
-
-
-  interface IAnalyticsDataParams {
-    departmentId?: number,
-    dateBegin: number,
-    dateEnd: number
-  };
+  const [chartFilter, setChartFilter] = useState<IChartFilter>({});
 
   const analyticsDataParams: IAnalyticsDataParams = {
     dateBegin: new Date(activeYears.slice(0, 1)[0], 0, 1).getTime() || 0,
-    dateEnd: new Date(activeYears.slice(-1)[0], 11, 31).getTime() || 0
+    dateEnd: new Date(activeYears.slice(-1)[0], 11, 31).getTime() || 0,
+    ...(chartFilter['departments']?.length > 0 ? { departments: chartFilter['departments'].map((el: any) => el.ID) } : {}),
+    ...(chartFilter['contracts']?.length > 0 ? { contracts: chartFilter['contracts'].map((el: any) => el.ID) } : {}),
+    ...(chartFilter['workTypes']?.length > 0 ? { workTypes: chartFilter['workTypes'].map((el: any) => el.ID) } : {})
   };
-
-  if (department) analyticsDataParams.departmentId = department.ID;
 
   const {
     data: analyticsData,
@@ -73,14 +95,35 @@ export function ChartColumn(props: ChartColumnProps) {
     isFetching: analyticsDataIsFetching,
     refetch: analyticsDataRefetch,
   } = useGetSumByPeriodQuery(analyticsDataParams);
+
   const { data: departments, isFetching: departmentsIsFetching, refetch: departmentsRefetch } = useGetDepartmentsQuery();
+  const { data: workTypes, isFetching: workTypesIsFetching } = useGetWorkTypesQuery({
+    contractJob: chartFilter['contracts']?.map((el: any) => el.ID)
+  });
+  const { data: customerContracts, isFetching: customerContractsIsFetching } = useGetCustomerContractsQuery();
 
-  interface IMapOfArrays {
-    [key: string]: number;
-  };
+  const ref = useRef<HTMLDivElement>(null);
+  const ref2 = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number | undefined>(0);
 
-  interface IMapOfChartData {
-    [key: string]: IMapOfArrays;
+  useEffect(() => {
+    setWidth((ref2?.current?.clientWidth || 0) - 30);
+  }, [ref2?.current?.clientWidth]);
+
+  const changeChartFilter = (key: string, value: any[]) => {
+    const newChartFilter = { ...chartFilter };
+    delete newChartFilter[key];
+
+    /** При очистке выбранных заказов очищаем выбранные виды работ */
+    if (key === 'contracts' && value?.length === 0) {
+      delete newChartFilter['workTypes'];
+    };
+
+    /** Если были выбраны виды работ без указания заказов, то очищаем их при первичном выборе заказов */
+    if (key === 'contracts' && !newChartFilter['contracts']) {
+      delete newChartFilter['workTypes'];
+    };
+    setChartFilter({ ...newChartFilter, [key]: value });
   };
 
   const seriesMap: IMapOfChartData = {};
@@ -138,7 +181,6 @@ export function ChartColumn(props: ChartColumnProps) {
     periodType?.id === 1
       ? ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
       : activeYears.map(el => el.toString());
-
 
   const chartOptions: ApexCharts.ApexOptions = {
     chart: {
@@ -213,6 +255,7 @@ export function ChartColumn(props: ChartColumnProps) {
     <CustomizedCard
       borders
       boxShadows
+      ref={ref2}
       style={{
         flex: 1,
         display: 'flex'
@@ -231,26 +274,7 @@ export function ChartColumn(props: ChartColumnProps) {
                 }}
               >Продажи по месяцам</Typography>
               <Box flex={1} />
-              <Autocomplete
-                style={{
-                  width: '200px'
-                }}
-                options={departments || []}
-                onChange={(e, value) => setDepartment(value)}
-                value={department ? department : null}
-                getOptionLabel={option => option.NAME}
-                renderOption={(props, option) => (
-                  <li {...props} key={option.ID}>
-                    {option.NAME}
-                  </li>
-                )}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Все отделы"
-                  />
-                )}
-              />
+
               <TextField
                 style={{
                   width: '100px'
@@ -266,6 +290,202 @@ export function ChartColumn(props: ChartColumnProps) {
                 ))}
               </TextField>
             </Stack>
+            <Grid container spacing={1} ref={ref}
+                style={{
+                  width: width || '100%'
+                }}
+            >
+              <Grid item xs={4}>
+              <Autocomplete
+                multiple
+                filterOptions={filterOptions}
+                loading={departmentsIsFetching}
+                options={departments || []}
+                onChange={(e, value) => changeChartFilter('departments', value)}
+                value={chartFilter['departments'] || []}
+                getOptionLabel={option => option.NAME}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props} key={option.ID}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
+                      checked={selected}
+                    />
+                    {option.NAME}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Все отделы"
+                  />
+                )}
+              />
+              </Grid>
+              <Grid item xs={4}>
+              <Autocomplete
+
+                multiple
+                //fullWidth
+                // style={{
+                //   width: width || '100%'
+                // }}
+                filterOptions={filterOptions}
+                loading={customerContractsIsFetching}
+                options={customerContracts || []}
+                onChange={(e, value) => changeChartFilter('contracts', value)}
+                value={chartFilter['contracts'] || []}
+                getOptionLabel={option => option.USR$NAME}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props} key={option.ID}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
+                      // style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.USR$NAME}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Все заказы"
+                  />
+                )}
+              />
+              </Grid>
+              <Grid item xs={4}>
+              <Autocomplete
+                multiple
+                filterOptions={filterOptions}
+                loading={workTypesIsFetching}
+                options={workTypes || []}
+                onChange={(e, value) => changeChartFilter('workTypes', value)}
+                value={chartFilter['workTypes'] || []}
+                getOptionLabel={option => option.USR$NAME}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props} key={option.ID}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
+                      // style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.USR$NAME}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Виды работ"
+                  />
+                )}
+              />
+              </Grid>
+            </Grid>
+            {/* <Stack direction="row" spacing={1} sx={{ backgroundColor: 'red' }}>
+              <Autocomplete
+                multiple
+                // fullWidth
+                style={{
+                  // flexGrow: 2,
+                  width: '200px'
+                }}
+                filterOptions={filterOptions}
+                loading={departmentsIsFetching}
+                options={departments || []}
+                onChange={(e, value) => changeChartFilter('DEPARTMENTS', value)}
+                value={chartFilter['DEPARTMENTS'] || []}
+                getOptionLabel={option => option.NAME}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props} key={option.ID}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
+                      // style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.NAME}
+                  </li>
+                )}
+                noOptionsText="Не найден"
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    style={{
+                      flexGrow: 2,
+                    }}
+                    placeholder="Все отделы"
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                // fullWidth
+                style={{
+                  width: '200px'
+                }}
+                filterOptions={filterOptions}
+                loading={customerContractsIsFetching}
+                options={customerContracts || []}
+                onChange={(e, value) => changeChartFilter('CONTRACTS', value)}
+                value={chartFilter['CONTRACTS'] || []}
+                getOptionLabel={option => option.USR$NAME}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props} key={option.ID}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
+                      // style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.USR$NAME}
+                  </li>
+                )}
+                noOptionsText="Не найден"
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Все заказы"
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                // fullWidth
+                // style={{
+                //   width: '30%'
+                // }}
+                filterOptions={filterOptions}
+                loading={workTypesIsFetching}
+                options={workTypes || []}
+                onChange={(e, value) => changeChartFilter('WORKTYPES', value)}
+                value={chartFilter['WORKTYPES'] || []}
+                getOptionLabel={option => option.USR$NAME}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props} key={option.ID}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
+                      // style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.USR$NAME}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    style={{
+                      flexGrow: 1,
+                    }}
+                    placeholder="Виды работ"
+                  />
+                )}
+              />
+
+            </Stack> */}
             <Box height="5px">
               <LinearIndeterminate open={analyticsDataIsFetching} />
             </Box>
@@ -277,7 +497,6 @@ export function ChartColumn(props: ChartColumnProps) {
             <Autocomplete
               multiple
               disableCloseOnSelect
-              loading={departmentsIsFetching}
               options={[...years].sort((a, b) => b - a) || []}
               onChange={(e, value) => {
                 value.sort();

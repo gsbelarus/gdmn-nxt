@@ -60,7 +60,7 @@ export function RemainsByInvoices(props: RemainsByInvoicesProps) {
             />
         </CardContent>
         <Divider />
-        <CardActions>
+        <CardActions style={{ padding: '16px' }}>
           <Stack direction="row" spacing={3} flex={1}>
             <Box flex={1} />
             <Button onClick={handelClear}>
@@ -81,7 +81,7 @@ export function RemainsByInvoices(props: RemainsByInvoicesProps) {
         ? <CustomizedCard
           borders
           boxShadows
-          sx={{ p: 1 }}
+          style={{ padding: '16px' }}
         >
           <RemainsByInvoicesReport onDate={onDate || new Date()} />
         </CustomizedCard>

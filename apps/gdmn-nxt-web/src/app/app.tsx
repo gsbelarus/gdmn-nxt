@@ -10,8 +10,10 @@ import { baseUrl } from './const';
 import { Button, Divider, Typography, Stack } from '@mui/material';
 import { SelectMode } from './select-mode/select-mode';
 import CreateCustomerAccount from './create-customer-account/create-customer-account';
-import { Navigate, Routes } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { CircularIndeterminate } from './components/circular-indeterminate/circular-indeterminate';
+import { useGetCustomersQuery } from './features/customer/customerApi_new';
+import { useGetKanbanDealsQuery } from './features/kanban/kanbanApi';
 
 const query = async (config: AxiosRequestConfig<any>): Promise<IAuthResult> => {
   try {
@@ -35,9 +37,13 @@ const query = async (config: AxiosRequestConfig<any>): Promise<IAuthResult> => {
 const post = (url: string, data: Object) => query({ method: 'post', url, baseURL: baseUrl, data, withCredentials: true });
 const get = (url: string) => query({ method: 'get', url, baseURL: baseUrl, withCredentials: true });
 
-const App = () => {
+function App() {
   const dispatch = useDispatch<AppDispatch>();
   const { loginStage } = useSelector<RootState, UserState>( state => state.user );
+
+  /** Загрузка данных на фоне в овремя авторизации  */
+  const { } = useGetCustomersQuery();
+  const { } = useGetKanbanDealsQuery();
 
   useEffect(() => {
     (async function () {

@@ -7,8 +7,13 @@ export interface IPaginationData {
   pageNo: number;
   pageSize: number;
 };
+
+interface IFilteringData {
+  [name: string] : any[];
+}
 export interface IQueryOptions {
   pagination?: IPaginationData;
+  filter?: IFilteringData;
 };
 
 interface ICustomers {
@@ -16,6 +21,7 @@ interface ICustomers {
 };
 
 type ICustomersRequestResult = IRequestResult<ICustomers>;
+type ICustomerRequestResult = IRequestResult<{ contact: ICustomer }>;
 
 export const customerApi = createApi({
   reducerPath: 'customer',
@@ -23,7 +29,32 @@ export const customerApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: baseUrlApi, credentials: 'include' }),
   endpoints: (builder) => ({
     getCustomers: builder.query<ICustomer[], Partial<IQueryOptions> | void>({
-      query: (options) => 'contacts',
+      // query: (options) => 'contacts',
+      query(options) {
+        console.log('options', options);
+        const params = [];
+
+        for (const [name, value] of Object.entries(options || {})) {
+          console.log(name, value);
+          switch (true) {
+            case typeof value === 'object' && value !== null:
+              for (const [subName, subKey] of Object.entries(value)) {
+                params.push(`${subName}=${subKey}`);
+              };
+              break;
+
+            default:
+              params.push(`${name}=${value}`);
+              break;
+          }
+        };
+
+        console.log('params', params);
+        return {
+          url: `contacts?${params.join('&')}`,
+          method: 'GET',
+        }
+      },
       onQueryStarted() {
         console.info('⏩ request', 'GET', `${baseUrlApi}contacts`);
       },
@@ -37,11 +68,8 @@ export const customerApi = createApi({
           : error
             ? [{ type: 'Customers', id: 'ERROR' }]
             : [{ type: 'Customers', id: 'LIST' }]
-      // result
-      //   ? [...result.map(({ ID }) => ({ type: 'Customers' as const, ID }))]
-      //   : [{ type: 'Customers', id: 'LIST' }],
     }),
-    updateCustomer: builder.mutation<ICustomersRequestResult, Partial<ICustomer>>({
+    updateCustomer: builder.mutation<ICustomer, Partial<ICustomer>>({
       query(body) {
         const { ID: id } = body;
         return {
@@ -50,21 +78,13 @@ export const customerApi = createApi({
           body
         };
       },
-      invalidatesTags: (result, error) => {
-        console.log('result', result);
-        // result?.queries.contacts.map(({ ID }) => console.log('result_id', ID));
-        return [{ type: 'Customers', id: 350751947 }, { type: 'Customers', id: 'LIST' }];
-        // return (
-        //   result
-        //     ? [
-        //       ...result.queries.contacts.map(({ ID }) => ({ type: 'Customers' as const, ID })),
-        //       { type: 'Customers', id: 'LIST' },
-        //     ]
-        //     : error
-        //       ? [{ type: 'Customers', id: 'ERROR' }]
-        //       : [{ type: 'Customers', id: 'LIST' }]
-        // )
-      },
+      transformResponse: (response: ICustomerRequestResult) => response.queries?.contact,
+      invalidatesTags: (result, error) =>
+        result
+          ? [{ type: 'Customers', id: result?.ID }, { type: 'Customers', id: 'LIST' }]
+          : error
+              ? [{ type: 'Customers', id: 'ERROR' }]
+              : [{ type: 'Customers', id: 'LIST' }],
       onQueryStarted() {
         console.info('⏩ request', 'PUT', `${baseUrlApi}contacts`);
       },

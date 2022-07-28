@@ -1,7 +1,6 @@
 import {
   DataGridPro,
   GridColDef,
-  GridToolbar,
   ruRU,
   GridFilterItem,
   GridFilterInputValueProps,
@@ -22,16 +21,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CustomerEdit from '../components/Customers/customer-edit/customer-edit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCustomers, fetchHierarchy } from '../features/customer/actions';
-import { customersSelectors } from '../features/customer/customerSlice';
 import { RootState } from '../store';
-import { IContactWithLabels, ICustomer, ILabelsContact } from '@gsbelarus/util-api-types';
-import NestedSets from 'nested-sets-tree';
-import { CollectionEl } from 'nested-sets-tree';
-import { useAddLabelsContactMutation, useDeleteLabelsContactMutation, useGetLabelsContactQuery } from '../features/labels/labelsApi';
-import CustomTreeView from '../custom-tree-view/custom-tree-view';
-import ContactGroupEditForm from '../contact-group-edit/contact-group-edit';
-import { useAddGroupMutation, useDeleteGroupMutation, useGetGroupsQuery, useUpdateGroupMutation } from '../features/contact/contactGroupApi';
+import { ICustomer, ILabel } from '@gsbelarus/util-api-types';
 import { clearError } from '../features/error-slice/error-slice';
 import { useTheme } from '@mui/material';
 import CustomNoRowsOverlay from './DataGridProOverlay/CustomNoRowsOverlay';
@@ -44,6 +35,8 @@ import CustomGridToolbarOverlay from './DataGridProOverlay/CustomGridToolbarOver
 import { makeStyles } from '@mui/styles';
 import { useGetCustomersQuery, useUpdateCustomerMutation, useAddCustomerMutation, IPaginationData, useDeleteCustomerMutation } from '../features/customer/customerApi_new';
 import { saveFilterData, saveFilterModel } from '../store/filtersSlice';
+import { useGetLabelsQuery } from '../features/labels';
+import LabelMarker from '../components/Labels/label-marker/label-marker';
 
 const useStyles = makeStyles((theme: Theme) => ({
   DataGrid: {
@@ -83,18 +76,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const labelStyle: CSSProperties = {
   display: 'inline-block',
-  fontSize: '0.625rem',
-  fontWeight: 'bold',
-  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
-  textTransform: 'uppercase',
-  border: '1px solid hsl(198, 100%, 60%)',
-  borderRadius: '2em',
-  backgroundColor: 'hsla(198, 100%, 72%, 0.2)',
-  color: 'hsl(198, 100%, 60%)',
-  padding: '2.5px 9px',
-  margin: '0px 5px',
-  width: 'fit-content',
-  height: 'fit-content'
+  padding: '2.5px 0px',
 };
 
 // interface IPaginationData {
@@ -108,18 +90,12 @@ export interface CustomersProps {}
 export function Customers(props: CustomersProps) {
   const classes = useStyles();
 
-  // const { data, isFetching, refetch } = useGetAllContactsQuery();
-
   const [reconciliationShow, setReconciliationShow] = useState(false);
   const [currentOrganization, setCurrentOrganization] = useState(0);
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState('');
   const [openEditForm, setOpenEditForm] = useState(false);
   const [openFilters, setOpenFilters] = useState(false);
-  const [openContactGroupEditForm, setOpenContactGroupEditForm] = useState(false);
-  const [treeNodeId, setTreeNodeId] = useState<number | null>(null);
-  const [editingTreeNodeId, setEditingTreeNodeId] = useState<number>();
-  const [addingGroup, setAddingGroup] = useState(false);
   const [filterModel, setFilterModel] = useState<GridFilterModel>();
   const [searchName, setSearchName] = useState('');
   const [filteringData, setFilteringData] = useState<IFilteringData>({});
@@ -134,24 +110,23 @@ export function Customers(props: CustomersProps) {
   // const allCustomers = useSelector(customersSelectors.selectAll);
   const { error: customersError, loading: customersLoading } = useSelector((state: RootState) => state.customers);
 
-  const { data: customers, isFetching: customerFetching, refetch: customerRefetch } = useGetCustomersQuery();
+  const { data: customers, isFetching: customerFetching, refetch: customerRefetch } = useGetCustomersQuery({
+    // pagination: paginationData,
+    // ...(filteringData['DEPARTMENTS']?.length > 0 ? { departments: filteringData['DEPARTMENTS']?.map((el: any) => el.ID) } : {}),
+    // ...(filteringData ? { filter: filteringData['DEPARTMENTS']?.length > 0 ? { departments: filteringData['DEPARTMENTS']?.map((el: any) => el.ID) } : {} } : {})
+    // ...(filteringData ? { filter: filteringData } : {})
+    // filter: filteringData
+  });
   const [updateCustomer] = useUpdateCustomerMutation();
   const [addCustomer] = useAddCustomerMutation();
   const [deleteCustomer] = useDeleteCustomerMutation();
 
-  // console.log('data', customerFetching, customers);
-
   const dispatch = useDispatch();
 
-  const [addLabelsContact] = useAddLabelsContactMutation();
-  const [deleteLabelsContact] = useDeleteLabelsContactMutation();
+  // console.log('setFilterModel', filterModel);
+  // console.log('setFilteringData', filteringData);
 
-  const { data: labelsContact, error: labelError, refetch: refetchLabels } = useGetLabelsContactQuery();
-
-  const { data: groups, isFetching: groupIsFetching } = useGetGroupsQuery();
-  const [addGroup] = useAddGroupMutation();
-  const [updateGroup] = useUpdateGroupMutation();
-  const [deleteGroup] = useDeleteGroupMutation();
+  const { data: labels } = useGetLabelsQuery();
 
   const { errorMessage } = useSelector((state: RootState) => state.error);
 
@@ -160,6 +135,8 @@ export function Customers(props: CustomersProps) {
 
   function CurrentLabelFilter(props: GridFilterInputValueProps) {
     const { item, applyValue, focusElementRef } = props;
+
+    const label = labels?.find(el => el.ID === item.value);
 
     return (
       <div
@@ -174,7 +151,7 @@ export function Customers(props: CustomersProps) {
         <div
           style={labelStyle}
         >
-          {groups?.find(el => el.ID === item.value)?.NAME}
+          {label ? <LabelMarker label={label} /> : <></>}
         </div>
       </div>
     );
@@ -193,7 +170,7 @@ export function Customers(props: CustomersProps) {
       }
 
       return (params: any): boolean => {
-        return params.row.LABELS?.find((label: any) => label.USR$LABELKEY === filterItem.value);
+        return params.row.LABELS?.find((label: any) => label.ID === filterItem.value);
       };
     },
     InputComponent: CurrentLabelFilter,
@@ -215,7 +192,7 @@ export function Customers(props: CustomersProps) {
       if (!filterItem?.value.length) return (params: any): boolean => true;
 
       return (params: any): boolean => {
-        return params.row.LABELS?.find((label: any) => filterItem.value.find((el: any) => el.ID === label.USR$LABELKEY));
+        return params.row.LABELS?.find((label: any) => filterItem.value.find((el: any) => el.ID === label.ID));
       };
     }
   };
@@ -286,8 +263,6 @@ export function Customers(props: CustomersProps) {
 
       if (!filterItem?.value.length) return (params: any): boolean => true;
 
-      // console.log('containWorkTypes', filteringData && filteringData['METHODS'] ? (filteringData['METHODS'] as any)['WORKTYPES'] === 'OR' : false);
-
       return (params: any): boolean => {
         if (filteringData && filteringData['METHODS'] ? (filteringData['METHODS'] as any)['WORKTYPES'] === 'OR' : false) {
           return params.row.CONTRACTS?.find((contract: any) => filterItem.value.find((el: any) =>el.USR$CONTRACTJOBKEY === contract.ID));
@@ -296,7 +271,6 @@ export function Customers(props: CustomersProps) {
             return params.row.CONTRACTS?.find((el: any) => el.ID === value.USR$CONTRACTJOBKEY);
           });
         }
-        // return params.row.CONTRACTS?.find((contract: any) => filterItem.value.find((el: any) => el.USR$CONTRACTJOBKEY === contract.ID));
       };
     }
   };
@@ -306,12 +280,12 @@ export function Customers(props: CustomersProps) {
     { field: 'PHONE', headerName: 'Телефон', width: 200 },
     { field: 'LABELS',
       headerName: 'Метки',
-      width: 380,
+      width: 350,
       filterOperators: [isLabel, containLabels],
       renderCell: (params) => {
         const numberLabelsInRow = 2;
 
-        const labels: ILabelsContact[] = params.row.LABELS;
+        const labels: ILabel[] = params.row.LABELS;
 
         if (!labels?.length) {
           return <></>;
@@ -335,13 +309,18 @@ export function Customers(props: CustomersProps) {
                         <ListItemButton
                           key={subLabel.ID}
                           onClick={() => {
-                            setFilterModel({ items: [{ id: 1, columnField: 'LABELS', value: subLabel.USR$LABELKEY, operatorValue: 'is' }] });
-                            setFilteringData({ 'LABELS': [{ ID: subLabel.USR$LABELKEY }] });
-                            // dispatch(setFilterData({ 'customers': { 'LABELS': [{ ID: subLabel.USR$LABELKEY }] } }));
+                            setFilterModel({ items: [{ id: 1, columnField: 'LABELS', value: subLabel.ID, operatorValue: 'is' }] });
+                            setFilteringData({ 'LABELS': [{ ID: subLabel.ID }] });
                           }}
                           style={labelStyle}
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: 'transparent',
+                            }
+                          }}
                         >
-                          {groups?.find(hierarchy => hierarchy.ID === subLabel.USR$LABELKEY)?.NAME}
+                          <LabelMarker label={subLabel} />
+                          {/* {labels?.find(label => label.ID === subLabel.ID)?.USR$NAME} */}
                         </ListItemButton>
                       );
                     })}
@@ -402,7 +381,6 @@ export function Customers(props: CustomersProps) {
   useEffect(() => {
     setFilterModel(filtersStorage.filterModels['customers']);
     setFilteringData(filtersStorage.filterData['customers']);
-    // console.log('123', Object.keys(filtersStorage.filterData['customers'] || {}));
     if (Object.keys(filtersStorage.filterData['customers'] || {}).length > 0) {
       setOpenFilters(true);
     };
@@ -421,17 +399,17 @@ export function Customers(props: CustomersProps) {
   }, [customersError, errorMessage]);
 
   /** Перевод вложенной структуры с lb rb в бинарное дерево */
-  const tree: NestedSets = new NestedSets({
-    id: 'ID',
-    parentId: 'PARENT',
-    lft: 'LB',
-    rgt: 'RB'
-  });
+  // const tree: NestedSets = new NestedSets({
+  //   id: 'ID',
+  //   parentId: 'PARENT',
+  //   lft: 'LB',
+  //   rgt: 'RB'
+  // });
 
-  if (groups) {
-    const arr: CollectionEl[] = groups.map(({ NAME, ...el }) => ({ ...el, PARENT: el.PARENT || 0 }));
-    tree.loadTree(arr, { createIndexes: true });
-  }
+  // if (groups) {
+  //   const arr: CollectionEl[] = groups.map(({ NAME, ...el }) => ({ ...el, PARENT: el.PARENT || 0 }));
+  //   tree.loadTree(arr, { createIndexes: true });
+  // }
 
   /** Close snackbar manually */
   const handleSnackBarClose = (event: React.SyntheticEvent | Event, reason?: string) => {
@@ -465,24 +443,16 @@ export function Customers(props: CustomersProps) {
     setOpenEditForm(false);
 
     if (deleting) {
-      deleteLabelsContact(values.ID);
       deleteCustomer(values.ID);
       return;
     };
 
     if (!values.ID) {
-      // dispatch(addCustomer(values));
       addCustomer(values);
       return;
-    }
+    };
 
-    if (values.LABELS?.length) {
-      addLabelsContact(values.LABELS);
-    } else {
-      deleteLabelsContact(values.ID);
-    }
     updateCustomer(values);
-    // dispatch(updateCustomer(values));
   };
 
 
@@ -492,8 +462,6 @@ export function Customers(props: CustomersProps) {
   };
 
   const handleOrganizationDeleteOnClick = () => {
-    // console.log('deleteClick', currentOrganization);
-
     if (!currentOrganization) {
       setSnackBarMessage('Не выбрана организация');
       setOpenSnackBar(true);
@@ -527,8 +495,6 @@ export function Customers(props: CustomersProps) {
 
       setFilterModel({ items: filterModels });
       setFilteringData(newValue);
-
-      // console.log('handleFilteringData', newValue, filterModels);
     },
     handleFilterClose: async (event: any, reason: 'backdropClick' | 'escapeKeyDown') => {
       if (
@@ -544,26 +510,6 @@ export function Customers(props: CustomersProps) {
   return (
     <Stack flex={1} display="flex" direction="column" spacing={2} style={{ overflow: 'hidden' }}>
       <Stack direction="row" flex={1} >
-        {/* <Stack direction="column" flex="1" padding={2}>
-          <Box sx={{ mb: 1 }}>
-            <Button onClick={contactGroupHandlers.handleAdd} disabled={groupIsFetching} startIcon={<AddIcon/>}>Добавить</Button>
-          </Box>
-          <CustomTreeView
-            hierarchy={groups || []}
-            tree={tree}
-            onNodeSelect={(event: React.SyntheticEvent, nodeId: string) => setTreeNodeId(Number(nodeId))}
-            onEdit={contactGroupHandlers.handleEdit}
-            onDelete={contactGroupHandlers.handleDelete}
-          />
-          {openContactGroupEditForm ?
-            <ContactGroupEditForm
-              group={addingGroup ? null : groups?.find(el => el.ID === editingTreeNodeId) || null}
-              tree={tree}
-              onSubmit={contactGroupHandlers.onSubmit}
-              onCancel={contactGroupHandlers.handleCancel}
-            />
-            : null}
-        </Stack> */}
         <Stack direction="column" style={{ width: '100%' }} padding={2}>
           <Box sx={{ mb: 1 }}>
             <Stack direction="row" spacing={2}>
@@ -589,9 +535,6 @@ export function Customers(props: CustomersProps) {
                 />
               </Box>
               <Box display="flex" justifyContent="center">
-                {/* <Button onClick={filterHandlers.handleFilter} disabled={customersLoading || !displayDataGrid} startIcon={<FilterAltIcon />}>
-                  Фильтр
-                </Button> */}
                 <IconButton
                   onClick={filterHandlers.handleFilter}
                   disabled={customerFetching || !displayDataGrid}
@@ -633,7 +576,8 @@ export function Customers(props: CustomersProps) {
                 columns={columns}
                 columnVisibilityModel={{
                   CONTRACTS: false,
-                  DEPARTMENTS: false
+                  DEPARTMENTS: false,
+                  WORKTYPES: false,
                 }}
                 pagination
                 disableMultipleSelection
@@ -644,14 +588,14 @@ export function Customers(props: CustomersProps) {
                   // Toolbar: CustomGridToolbarOverlay,
                   LoadingOverlay: CustomLoadingOverlay,
                   NoRowsOverlay: CustomNoRowsOverlay,
-                  NoResultsOverlay: CustomNoRowsOverlay
+                  NoResultsOverlay: CustomNoRowsOverlay,
                 }}
                 filterModel={filterModel}
                 onFilterModelChange={(model, detail) => setFilterModel(model)}
                 // pinnedColumns={{ left: [customersLoading ? '' : 'NAME'] }}
                 getRowHeight={(params) => {
                   const customer: ICustomer = params.model as ICustomer;
-                  const labels: ILabelsContact[] | undefined = customer.LABELS;
+                  const labels: ILabel[] | undefined = customer.LABELS;
 
                   if (labels?.length && labels.length > 4) {
                     return 40 * Math.ceil(labels.length / 2);
@@ -701,7 +645,18 @@ export function Customers(props: CustomersProps) {
         </Stack>
         {/* </div> */}
       </Stack>
-      {openEditForm ?
+      <CustomerEdit
+        open={openEditForm}
+        customer={
+          customers
+            ?.find(element => element.ID === currentOrganization)
+            || null
+        }
+        onSubmit={handleOrganiztionEditSubmit}
+        onCancelClick={handleOrganiztionEditCancelClick}
+        onDeleteClick={handleOrganizationDeleteOnClick}
+      />
+      {/* {openEditForm ?
         <CustomerEdit
           open={openEditForm}
           customer={
@@ -714,7 +669,7 @@ export function Customers(props: CustomersProps) {
           onDeleteClick={handleOrganizationDeleteOnClick}
         />
         : null
-      }
+      } */}
       <Snackbar open={openSnackBar} autoHideDuration={5000} onClose={handleSnackBarClose}>
         <Alert onClose={handleSnackBarClose} variant="filled" severity="error">{snackBarMessage}</Alert>
       </Snackbar>

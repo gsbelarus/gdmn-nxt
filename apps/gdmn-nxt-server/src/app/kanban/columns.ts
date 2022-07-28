@@ -53,9 +53,9 @@ const get: RequestHandler = async (req, res) => {
     };
 
     return res.status(200).json(result);
-  } catch(error) {
+  } catch (error) {
     return res.status(500).send(resultError(error.message));
-  }finally {
+  } finally {
     await releaseReadTransaction(req.sessionID);
   };
 };

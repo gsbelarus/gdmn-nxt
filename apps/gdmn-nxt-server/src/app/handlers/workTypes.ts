@@ -6,7 +6,7 @@ import { getReadTransaction, releaseReadTransaction } from '../utils/db-connecti
 const get: RequestHandler = async (req, res) => {
   const { attachment, transaction } = await getReadTransaction(req.sessionID);
 
-  const { id } = req.params;
+  const { contractJobKeys } = req.params;
 
   try {
     const _schema = {};
@@ -34,7 +34,8 @@ const get: RequestHandler = async (req, res) => {
           FROM
             USR$BG_JOBWORK w
           WHERE
-            coalesce(w.USR$NOTACTIVE,1) = 0`
+            coalesce(w.USR$NOTACTIVE, 0) = 0
+            ${contractJobKeys ? ` AND w.USR$CONTRACTJOBKEY IN (${contractJobKeys})` : ''}`
       },
     ];
 
@@ -42,6 +43,7 @@ const get: RequestHandler = async (req, res) => {
       queries: {
         ...Object.fromEntries(await Promise.all(queries.map(execQuery)))
       },
+      _params: contractJobKeys ? undefined : [{ contractJobKeys }],
       _schema
     };
 

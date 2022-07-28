@@ -1,4 +1,5 @@
 import { Components, ThemeOptions } from '@mui/material';
+import * as locales from '@mui/material/locale';
 
 export default function componentStyleOverrides(theme: ThemeOptions): Components {
   return {
@@ -19,6 +20,7 @@ export default function componentStyleOverrides(theme: ThemeOptions): Components
       }
     },
     MuiAutocomplete: {
+      ...locales.ruRU.components?.MuiAutocomplete,
       styleOverrides: {
         paper: {
           borderTopLeftRadius: 0,

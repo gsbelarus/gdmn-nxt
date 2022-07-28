@@ -10,9 +10,11 @@ import { useGetCustomerContractsQuery } from '../../features/customer-contracts/
 import { useGetGroupsQuery } from '../../features/contact/contactGroupApi';
 import { Dispatch, forwardRef, ReactElement, Ref, SetStateAction, useEffect, useState } from 'react';
 import { TransitionProps } from '@mui/material/transitions';
-import { IContactHierarchy, ILabelsContact } from '@gsbelarus/util-api-types';
+import { IContactHierarchy, ILabel, ILabelsContact } from '@gsbelarus/util-api-types';
 import { Theme } from '@mui/material/styles';
 import { useGetWorkTypesQuery } from '../../features/work-types/workTypesApi';
+import { useGetLabelsQuery } from '../../features/labels';
+import LabelMarker from '../../components/Labels/label-marker/label-marker';
 
 const useStyles = makeStyles((theme: Theme) => ({
   dialog: {
@@ -77,14 +79,27 @@ export function CustomersFilter(props: CustomersFilterProps) {
 
   const { data: departments, isFetching: departmentsIsFetching } = useGetDepartmentsQuery();
   const { data: customerContracts, isFetching: customerContractsIsFetching } = useGetCustomerContractsQuery();
-  const { data: labels, isFetching: labelsIsFetching } = useGetGroupsQuery();
-  const { data: workTypes, isFetching: workTypesIsFetching } = useGetWorkTypesQuery();
+  // const { data: labels, isFetching: labelsIsFetching } = useGetGroupsQuery();
+  const { data: labels, isFetching: labelsIsFetching } = useGetLabelsQuery();
+  const { data: workTypes, isFetching: workTypesIsFetching } = useGetWorkTypesQuery(
+    { contractJob: filteringData?.CONTRACTS?.map(el => el.ID) },
+    { refetchOnMountOrArgChange: true });
 
   const handleOnChange = (entity: string, value: any) => {
     const newObject = Object.assign({}, filteringData);
     delete newObject[entity];
 
-    onFilteringDataChange(Object.assign(newObject, { [entity]: value }));
+    /** При очистке выбранных заказов очищаем выбранные виды работ */
+    if (entity === 'CONTRACTS' && value?.length === 0) {
+      delete newObject['WORKTYPES'];
+    };
+
+    /** Если были выбраны виды работ без указания заказов, то очищаем их при первичном выборе заказов */
+    if (entity === 'CONTRACTS' && !newObject['CONTRACTS']) {
+      delete newObject['WORKTYPES'];
+    };
+
+    onFilteringDataChange(Object.assign(newObject, value?.length > 0 ? { [entity]: value } : {}));
   };
 
   const handleMethodOnChange = (e: any, checked: any) => {
@@ -253,9 +268,9 @@ export function CustomersFilter(props: CustomersFilterProps) {
               options={labels || []}
               onChange={(e, value) => handleOnChange('LABELS', value)}
               value={
-                labels?.filter(label => filteringData && (filteringData.LABELS)?.find((el: IContactHierarchy) => el.ID === label.ID))
+                labels?.filter(label => filteringData && (filteringData.LABELS)?.find((el: ILabel) => el.ID === label.ID))
               }
-              getOptionLabel={option => option.NAME}
+              getOptionLabel={option => option.USR$NAME}
               renderOption={(props, option, { selected }) => (
                 <li {...props} key={option.ID}>
                   <Checkbox
@@ -264,7 +279,26 @@ export function CustomersFilter(props: CustomersFilterProps) {
                     style={{ marginRight: 8 }}
                     checked={selected}
                   />
-                  <Box className={classes.label}>{option.NAME}</Box>
+                  <Stack direction="column">
+                    <Stack direction="row">
+                      <Box
+                        component="span"
+                        sx={{
+                          width: 14,
+                          height: 14,
+                          // flexShrink: 0,
+                          borderRadius: '12px',
+                          mr: 1,
+                          alignSelf: 'center',
+                        }}
+                        style={{ backgroundColor: option.USR$COLOR }}
+                      />
+                      <Box>
+                        {option.USR$NAME}
+                      </Box>
+                    </Stack>
+                    <Typography variant="caption">{option.USR$DESCRIPTION}</Typography>
+                  </Stack>
                 </li>
               )}
               renderInput={(params) => (
@@ -274,6 +308,11 @@ export function CustomersFilter(props: CustomersFilterProps) {
                   placeholder="Выберите метки"
                 />
               )}
+              renderTags={(value: readonly ILabel[], getTagProps) =>
+                value.map((option: ILabel, index: number) =>
+                  <LabelMarker label={option} {...getTagProps({ index })}/>
+                )
+              }
               loading={labelsIsFetching}
               loadingText="Загрузка данных..."
             />

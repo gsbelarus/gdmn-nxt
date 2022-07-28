@@ -36,6 +36,7 @@ import { NlpMain } from './app/nlp-main/nlp-main';
 import { SqlEditor } from './app/components/System/sql-editor/sql-editor';
 import CustomersMap from './app/customers/customers-map/customers-map';
 import RemainsByInvoices from './app/pages/Analytics/UserReports/remains-by-invoices/remains-by-invoices';
+import Labels from './app/pages/Managment/Lables';
 
 registerMUI();
 
@@ -69,6 +70,7 @@ const Main = () => {
                     <Route path="reports/reconciliation/:customerId" element={<ReconciliationAct />} />
                     <Route path="reports/remainbyinvoices" element={<RemainsByInvoices />} />
                     <Route path="analytics/salesfunnel" element={<SalesFunnel />} />
+                    <Route path="labels" element={<Labels />}/>
                   </Route>
                   <Route path="/system" element={<BaseForm />}>
                     <Route path="er-model-domains" element={<ErModelDomains />} />

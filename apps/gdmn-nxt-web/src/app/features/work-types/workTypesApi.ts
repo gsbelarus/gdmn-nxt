@@ -13,8 +13,22 @@ export const workTypesApi = createApi({
   tagTypes: ['workType'],
   baseQuery: fetchBaseQuery({ baseUrl: baseUrlApi, credentials: 'include' }),
   endpoints: (builder) => ({
-    getWorkTypes: builder.query<any[], number | void>({
-      query: (id) => 'worktypes',
+    getWorkTypes: builder.query<IWorkType[], { id?: number, contractJob?: number[] } >({
+      query: ({ id, contractJob }) => {
+        let urlString = '';
+        if (Array.isArray(contractJob) && contractJob.length > 0) {
+          urlString = `/contractJobKey/${contractJob.join()}`;
+        };
+
+        if (id) {
+          urlString = `/${id}`;
+        };
+
+        return {
+          url: `worktypes${urlString}`,
+          method: 'GET',
+        };
+      },
       transformResponse: (response: IWorkTypesRequestResult) => response.queries?.workTypes || [],
       providesTags: (result, error) =>
         result

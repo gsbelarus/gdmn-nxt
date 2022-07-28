@@ -8,16 +8,20 @@ interface IChartData{
 
 type IChartDataRequestResult = IRequestResult<IChartData>;
 
+export interface IChartFilter {
+  [key: string]: any
+};
+
 export const chartDataApi = createApi({
   reducerPath: 'chartData',
   baseQuery: fetchBaseQuery({ baseUrl: baseUrlApi, credentials: 'include' }),
   endpoints: (builder) => ({
-    getSumByPeriod: builder.query<IChartSumByperiod[], {departmentId?: number, dateBegin: number, dateEnd: number}>({
+    getSumByPeriod: builder.query<IChartSumByperiod[], IChartFilter>({
       query: (options) => {
         const params = [];
 
         for (const [name, value] of Object.entries(options)) {
-          params.push(`${name}=${value}`);
+          params.push(`${name}=${Array.isArray(value) ? value.join(',') : value}`);
         };
 
         return ({

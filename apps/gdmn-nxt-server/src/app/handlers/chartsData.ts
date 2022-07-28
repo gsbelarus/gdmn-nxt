@@ -7,11 +7,6 @@ import { sqlQuery } from '../utils/sqlQuery';
 const getSumByPeriod: RequestHandler = async(req, res) => {
   // sumbyperiod/?departmentId=147016912&dateBegin=1577912400000&dateEnd=1643662800000
 
-  const departmentId = req.query.departmentId as string;
-  if (departmentId && isNaN(parseInt(departmentId, 10))) {
-    return res.status(422).send(resultError('Неверный формат "departmentId"'));
-  };
-
   const dateBegin = new Date(Number(req.query.dateBegin));
   if (isNaN(dateBegin.getTime())) {
     return res.status(422).send(resultError('Не указано поле "dateBegin"'));
@@ -21,6 +16,10 @@ const getSumByPeriod: RequestHandler = async(req, res) => {
   if (isNaN(dateEnd.getTime())) {
     return res.status(422).send(resultError('Не указано поле "dateEnd"'));
   };
+
+  const jobWorkIds = req.query.workTypes as string;
+  const contractIds = req.query.contracts as string;
+  const departmentIds = req.query.departments as string;
 
   const { attachment, transaction } = await getReadTransaction(req.sessionID);
 
@@ -32,28 +31,6 @@ const getSumByPeriod: RequestHandler = async(req, res) => {
         }
       }
     };
-
-    // const execQuery = async ({ name, query, params }: { name: string, query: string, params?: any[] }) => {
-    //   const rs = await attachment.executeQuery(transaction, query, params);
-    //   try {
-    //     const data = await rs.fetchAsObject();
-    //     const sch = schema[name];
-
-    //     if (sch) {
-    //       for (const rec of data) {
-    //         for (const fld of Object.keys(rec)) {
-    //           if ((sch[fld]?.type === 'date' || sch[fld]?.type === 'timestamp') && rec[fld] !== null) {
-    //             rec[fld] = (rec[fld] as Date).getTime();
-    //           }
-    //         }
-    //       }
-    //     };
-
-    //     return data;
-    //   } finally {
-    //     await rs.close();
-    //   }
-    // };
 
     const applySchema = (schema: ITableSchema, data: object[]) => {
       if (schema) {
@@ -77,51 +54,37 @@ const getSumByPeriod: RequestHandler = async(req, res) => {
       dateEnd
         ? withKeys ? arr.push({ dateEnd }) : arr.push(dateEnd)
         : null;
-      departmentId
-        ? withKeys ? arr.push({ departmentId }) : arr.push(departmentId)
-        : null;
+      // departmentId
+      //   ? withKeys ? arr.push({ departmentId }) : arr.push(departmentId)
+      //   : null;
+      // jobWorkId
+      //   ? withKeys ? arr.push({ jobWorkId }) : arr.push(jobWorkId)
+      //   : null;
+      // contractIds
+      //   ? withKeys ? arr.push({ departmentId }) : arr.push(departmentId)
 
       return (arr?.length > 0 ? arr : undefined);
     };
 
-    // const query = {
-    //   name: 'sumByperiod',
-    //   query: `
-    //     SELECT
-    //       CAST(c.USR$DOCDATE AS DATE) AS ONDATE,
-    //       SUM(c.USR$SUMNCU) AMOUNT
-    //     FROM
-    //       USR$CRM_CUSTOMER c
-    //       JOIN gd_document doc on doc.ID = c.USR$ID
-    //       JOIN gd_contact dep on dep.ID = c.USR$DEPOTKEY
-    //     WHERE
-    //       c.USR$DOCDATE BETWEEN ? AND ?
-    //       ${departmentId ? 'AND dep.ID = ?' : ''}
-    //     GROUP BY CAST(c.USR$DOCDATE AS DATE)
-    //     ORDER BY 1`,
-    //   params: getParams(false)
-    // };
-
-
     const namedSQL = new sqlQuery(attachment, transaction);
     namedSQL.SQLtext = `
       SELECT
-        CAST(c.USR$DOCDATE AS DATE) AS ONDATE,
+        c.USR$DOCDATE AS ONDATE,
         SUM(c.USR$SUMNCU) AMOUNT
       FROM
         USR$CRM_CUSTOMER c
         JOIN gd_document doc on doc.ID = c.USR$ID
-        JOIN gd_contact dep on dep.ID = c.USR$DEPOTKEY
+        ${departmentIds ? 'JOIN gd_contact dep on dep.ID = c.USR$DEPOTKEY' : ''}
+        ${jobWorkIds ? 'JOIN USR$BG_JOBWORK jb ON jb.ID = c.USR$JOBWORKKEY' : ''}
       WHERE
         c.USR$DOCDATE BETWEEN :DateBegin AND :DateEnd
-        ${departmentId ? 'AND dep.ID = :DepID' : ''}
-      GROUP BY CAST(c.USR$DOCDATE AS DATE)
+        ${departmentIds ? `AND dep.ID IN (${departmentIds})` : ''}
+        ${contractIds ? `AND c.USR$JOBKEY IN (${contractIds})` : ''}
+        ${jobWorkIds ? `AND jb.ID IN (${jobWorkIds})` : ''}
+      GROUP BY c.USR$DOCDATE
       ORDER BY 1`;
     namedSQL.setParamByName('DateBegin').value = dateBegin;
     namedSQL.setParamByName('DateEnd').value = dateEnd;
-    if (departmentId) {
-      namedSQL.setParamByName('DepID').value = departmentId;
-    };
 
     const sumByperiod = await namedSQL.execute();
     applySchema(schema['sumByperiod'], sumByperiod);

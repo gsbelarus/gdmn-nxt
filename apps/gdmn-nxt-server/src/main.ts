@@ -24,6 +24,7 @@ import { importedModels } from './app/models';
 import contractsListRouter from './app/routes/contractsListRouter';
 import reportsRouter from './app/routes/reportsRouter';
 import workTypes from './app/handlers/workTypes';
+import labelsRouter from './app/routes/labelsRouter';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const MemoryStore = require('memorystore')(session);
@@ -267,6 +268,10 @@ router.put('/customercontracts/:id', customerContracts.upsert);
 router.delete('/customercontracts/:id', customerContracts.remove);
 
 router.get('/worktypes', workTypes.get);
+router.get('/worktypes/contractJobKey/:contractJobKeys', workTypes.get);
+
+/** Labels*/
+router.use(labelsRouter);
 
 /** Contracts list */
 router.use(contractsListRouter);

@@ -79,8 +79,6 @@ export function ContactPersonList(props: ContactPersonListProps) {
     setPersonEdit(true);
   };
 
-  console.log('persons', persons);
-
   const columns: GridColDef[] = [
     { field: 'NAME', headerName: 'Имя', flex: 1,
       renderCell: (params) => {
@@ -114,7 +112,7 @@ export function ContactPersonList(props: ContactPersonListProps) {
       }
     },
     { field: 'USR$BG_OTDEL', headerName: 'Отдел', width: 100,
-      valueGetter: ({ value }) => value.NAME
+      valueGetter: ({ value }) => value?.NAME
     },
     {
       field: 'ACTIONS',

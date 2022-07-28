@@ -137,17 +137,19 @@ export function KanbanCard(props: KanbanCardProps) {
         <Stack direction="column" spacing={1}>
           <Stack direction="row" style={{ position: 'relative' }}>
             <Typography variant="h2" flex={1}>{card.DEAL?.USR$NAME}</Typography>
-            <div
-              style={{
-                display: showActions ? 'inline' : 'none',
-                position: 'absolute',
-                right: 0,
-              }}
-            >
-              <IconButton size="small" onClick={() => setCopyCard(true)}>
-                <ContentCopyIcon fontSize="small" />
-              </IconButton >
-            </div>
+            {columns.find(column => column.ID === card.USR$MASTERKEY)?.USR$INDEX === 0
+              ? <div
+                style={{
+                  display: showActions ? 'inline' : 'none',
+                  position: 'absolute',
+                  right: 0,
+                }}
+              >
+                <IconButton size="small" onClick={() => setCopyCard(true)}>
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton >
+              </div>
+            : <></>}
           </Stack>
           <Typography variant="caption" noWrap>{card.DEAL?.CONTACT?.NAME}</Typography>
           <Typography>{(Math.round((card.DEAL?.USR$AMOUNT || 0) * 100) / 100).toFixed(2)} Br</Typography>

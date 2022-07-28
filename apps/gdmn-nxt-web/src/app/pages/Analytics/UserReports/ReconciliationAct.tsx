@@ -145,7 +145,7 @@ export const ReconciliationAct = (props: ReconciliationAct) => {
             </Grid>
           </CardContent>
           <Divider />
-          <CardActions>
+          <CardActions style={{ padding: '16px' }}>
             <Grid
               container
               direction={'row-reverse'}
@@ -173,16 +173,8 @@ export const ReconciliationAct = (props: ReconciliationAct) => {
           ? <CustomizedCard
             borders
             boxShadows
-            sx={{ p: 1 }}
+            sx={{ p: 2 }}
             ref={scollToRef}
-            onChange={()=> console.log('onChange')}
-            onScroll={()=> console.log('onChange')}
-            onBlur={()=> console.log('onChange')}
-            onVolumeChange={()=> console.log('onChange')}
-            onDurationChange={()=> console.log('onChange')}
-            onTransitionEnd={()=> console.log('onChange')}
-            onLoad={()=> console.log('onChange')}
-            onTransitionEndCapture={()=> console.log('onChange')}
           >
             <ReconciliationStatement
               custId={Number(inputParams?.cutomerId)}

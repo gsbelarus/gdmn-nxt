@@ -31,7 +31,8 @@ export interface IContractJob extends IContactWithID {
 };
 
 export interface ICustomer extends IContactWithID {
-  LABELS?: ILabelsContact[];
+  // LABELS?: ILabelsContact[];
+  LABELS?: ILabel[];
   CONTRACTS?: IContractJob[];
   DEPARTMETNS?: IContactWithID[];
   TAXID?: string;
@@ -144,6 +145,12 @@ export interface IContactsList extends IWithID {
 };
 
 export interface IWorkType extends IWithID {
-  USR$NAME?: string;
+  USR$NAME: string;
   USR$CONTRACTJOBKEY: number;
+};
+
+export interface ILabel extends IWithID {
+  USR$NAME: string;
+  USR$COLOR?: string;
+  USR$DESCRIPTION?: string;
 };
