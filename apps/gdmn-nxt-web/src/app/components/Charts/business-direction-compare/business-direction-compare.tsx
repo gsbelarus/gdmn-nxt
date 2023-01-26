@@ -3,8 +3,9 @@ import styles from './business-direction-compare.module.less';
 import CustomizedCard from '../../Styled/customized-card/customized-card';
 import ApexCharts, { ApexOptions } from 'apexcharts';
 import Chart from 'react-apexcharts';
-import { Box, Grid, TextField } from '@mui/material';
+import { Box, Grid, Stack, TextField, useTheme } from '@mui/material';
 import { useCallback, useMemo, useState } from 'react';
+import ChartColumn from '../chart-column/chart-column';
 import { DateRange, DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 import { IChartFilter, useGetBusinessDirectionQuery } from '../../../features/charts/chartDataApi';
 import { theme } from '../../../theme';
@@ -30,7 +31,7 @@ const chartOptionsDefault: ApexCharts.ApexOptions = {
 
         return `
         <div class="${styles['pie-tooltip-value']}">
-          <span>${value.toLocaleString()}</span>
+          <span>${value}</span>
         </div>`;
       },
       title: {
@@ -53,9 +54,15 @@ const chartOptionsDefault: ApexCharts.ApexOptions = {
     show: false,
     fontWeight: 600,
     position: 'top',
+
     markers: {
+
       radius: 5,
+      // offsetY: 2,
     },
+    // labels: {
+    //   colors: theme.color.grey[500],
+    // },
   },
   dataLabels: {
     enabled: false,
@@ -82,96 +89,13 @@ const chartOptionsDefault: ApexCharts.ApexOptions = {
   }
 };
 
-const titleFormatter = (message: string) => (seriesName: string) => `
-  <div class="${styles['pie-tooltip-label']}">
-    <span>${seriesName === noDataLabel ? message : seriesName}</span>
-  </div>`;
-
-
-const chartOptionsBarDefault: ApexCharts.ApexOptions = {
-  chart: {
-    id: 'column-bar',
-    stacked: false,
-    toolbar: {
-      show: false,
-    },
-    zoom: {
-      enabled: false
-    }
-  },
-  title: {
-    text: 'Сравнение бизнес-процессов и направлений',
-    align: 'center',
-    style: {
-      fontSize: '1.2em',
-      fontWeight: 700
-    },
-    offsetY: 20
-  },
-  noData: {
-    text: 'Нет данных',
-    align: 'center',
-    verticalAlign: 'middle',
-    style: {
-      fontSize: '20px',
-    }
-  },
-  tooltip: {
-    theme: 'light',
-    x: {
-      formatter(value, opts) {
-        return `
-        <div class="${styles['bar-tooltip-label']}">
-          <span>${value.toLocaleString()}</span>
-        </div>`;
-      },
-    },
-  },
-  xaxis: {
-    labels: {
-      formatter: (value) => (
-        isNaN(Number(value)) ? value : Number(value).toLocaleString()
-      )
-    }
-  },
-  yaxis: {
-    labels: {
-      style: {
-        // fontSize: '12px'
-      },
-      formatter: (value) => (
-        value.toLocaleString()
-      )
-    }
-  },
-  legend: {
-    fontSize: '15px',
-    fontFamily: '\'Roboto\', sans-serif',
-    offsetY: 5,
-    // labels: {
-    //   colors: theme.color.grey[500],
-    // },
-    markers: {
-      width: 16,
-      height: 16,
-      radius: 5
-    },
-    itemMargin: {
-      horizontal: 15,
-      vertical: 8
-    }
-  },
-  dataLabels: {
-    enabled: false
-  },
-};
 interface IInitState {
   datesLeft: DateRange<Date>;
   dateRight: DateRange<Date>;
 }
 
-// const onDate = new Date(2022, 7, 17);
-const onDate = new Date();
+const onDate = new Date(2022, 7, 17);
+// const onDate = new Date();
 const initState: IInitState = {
   datesLeft: [
     new Date((onDate).getFullYear(), (onDate).getMonth(), 1),
@@ -187,6 +111,7 @@ const initState: IInitState = {
 export interface BusinessDirectionCompareProps {}
 
 export function BusinessDirectionCompare(props: BusinessDirectionCompareProps) {
+  const theme = useTheme();
   const [selectedLeftMasterSeriesId, setSelectedLeftMasterSeriesId] = useState(-1);
   const [selectedRightMasterSeriesId, setSelectedRightMasterSeriesId] = useState(-1);
 
@@ -295,16 +220,7 @@ export function BusinessDirectionCompare(props: BusinessDirectionCompareProps) {
           },
           colors: colorsMaster
         } : {
-          colors: colorsNoData,
-          tooltip: {
-            ...chartOptionsDefault.tooltip,
-            y: {
-              ...chartOptionsDefault.tooltip?.y,
-              title: {
-                formatter: titleFormatter('Нет данных за указанный период')
-              }
-            }
-          }
+          colors: colorsNoData
         }),
       },
       detail: {
@@ -335,16 +251,7 @@ export function BusinessDirectionCompare(props: BusinessDirectionCompareProps) {
           },
           colors: colorsMaster
         } : {
-          colors: colorsNoData,
-          tooltip: {
-            ...chartOptionsDefault.tooltip,
-            y: {
-              ...chartOptionsDefault.tooltip?.y,
-              title: {
-                formatter: titleFormatter('Нет данных за указанный период')
-              }
-            }
-          }
+          colors: colorsNoData
         }),
       },
       detail: {
@@ -373,7 +280,7 @@ export function BusinessDirectionCompare(props: BusinessDirectionCompareProps) {
       {
         name: 'Период 2',
         data: selectedLeftMasterSeriesId >= 0
-          ? dataLeft[selectedLeftMasterSeriesId]?.businessProcesses?.map(d => dataRight[selectedLeftMasterSeriesId]?.businessProcesses?.find(dr => dr.name === d.name)?.amount || 0)
+          ? dataLeft[selectedLeftMasterSeriesId]?.businessProcesses?.map(d => dataRight[selectedLeftMasterSeriesId].businessProcesses?.find(dr => dr.name === d.name)?.amount || 0)
           : dataLeft?.map(d => dataRight.find(dr => dr.name === d.name)?.amount || 0)
       }
     ],
@@ -396,7 +303,7 @@ export function BusinessDirectionCompare(props: BusinessDirectionCompareProps) {
 
   return (
     <Grid container direction="column" spacing={3}>
-      <Grid item container direction={{ xs: 'column', md: 'column', lg: 'row' }} xs={6} spacing={3} >
+      <Grid item container direction={{ md: 'column', lg: 'row' }} xs={6} spacing={3} >
         <Grid item container xs={6}>
           <CustomizedCard borders style={{ flex: 1 }}>
             <Grid container direction="column">
@@ -481,8 +388,8 @@ export function BusinessDirectionCompare(props: BusinessDirectionCompareProps) {
           <Chart
             type="bar"
             height="100%"
-            options={chartOptionsBar}
             series={chartOptionsBar.series}
+            options={chartOptionsBar}
           />
         </CustomizedCard>
       </Grid>
