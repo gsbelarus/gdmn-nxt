@@ -111,7 +111,7 @@ export function CustomerEdit(props: CustomerEditProps) {
     NAME: customer?.NAME || '',
     PHONE: customer?.PHONE || '',
     EMAIL: customer?.EMAIL || '',
-    PARENT: customer?.PARENT || undefined,
+    PARENT: customer?.PARENT || groups?.find(group => group.NAME === 'Организации')?.ID,
     LABELS: customer?.LABELS || [],
     ADDRESS: customer?.ADDRESS || '',
     TAXID: customer?.TAXID || ''
@@ -217,41 +217,6 @@ export function CustomerEdit(props: CustomerEditProps) {
                         onChange={formik.handleChange}
                         value={formik.values.NAME}
                         helperText={formik.errors.NAME}
-                      />
-                      <Autocomplete
-                        options={groups || []}
-                        loading={groupFetching}
-                        getOptionLabel={option => option.NAME}
-                        value={groups?.filter(el => el.ID === formik.values.PARENT)[0] || null}
-                        onChange={(e, value) => {
-                          formik.setFieldValue(
-                            'PARENT',
-                            value ? value.ID : initValue.PARENT
-                          );
-                        }}
-                        renderOption={(props, option) => {
-                          return (
-                            <li {...props} key={option.ID}>
-                              {option.NAME}
-                            </li>
-                          );
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            key={params.id}
-                            label="Папка"
-                            className={classes.helperText}
-                            type="text"
-                            required
-                            name="PARENT"
-                            onBlur={formik.handleBlur}
-                            onChange={formik.handleChange}
-                            value={formik.values.PARENT}
-                            helperText={formik.errors.PARENT}
-                            placeholder="Выберите папку"
-                          />
-                        )}
                       />
                       <TextField
                         label="УНП"
