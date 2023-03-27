@@ -111,7 +111,7 @@ export function CustomerEdit(props: CustomerEditProps) {
     NAME: customer?.NAME || '',
     PHONE: customer?.PHONE || '',
     EMAIL: customer?.EMAIL || '',
-    PARENT: customer?.PARENT || groups?.find(group => group.NAME === 'Организации')?.ID,
+    PARENT: customer?.PARENT || undefined,
     LABELS: customer?.LABELS || [],
     ADDRESS: customer?.ADDRESS || '',
     TAXID: customer?.TAXID || ''
@@ -127,7 +127,6 @@ export function CustomerEdit(props: CustomerEditProps) {
       NAME: yup.string().required('')
         .max(80, 'Слишком длинное наименование'),
       EMAIL: yup.string().matches(/@./),
-      PARENT: yup.string().required('')
     }),
     onSubmit: (values) => {
       if (!confirmOpen) {

@@ -367,7 +367,7 @@ export const upsertContact: RequestHandler = async (req, res) => {
             INTO :in_TAXID;
           SUSPEND;
         END`,
-      params: [ID, NAME, EMAIL, PHONE, PARENT, ADDRESS, TAXID],
+      params: [ID, NAME, EMAIL, PHONE, PARENT ? PARENT : 147008647, ADDRESS, TAXID],
     };
 
 
