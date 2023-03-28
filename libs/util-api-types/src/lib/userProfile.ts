@@ -5,4 +5,6 @@ export interface IUserProfile {
   surname?: string;
   contactkey?: number,
   rank?: string;
+  colorMode: string,
+  dealsFilter: number
 };

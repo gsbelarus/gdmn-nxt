@@ -18,6 +18,8 @@ import { Action, IKanbanCard, IKanbanColumn, IPermissionByUser } from '@gsbelaru
 import DealsFilter, { IFilteringData } from '../../../components/Kanban/deals-filter/deals-filter';
 import { clearFilterData, IActiveKanbanDealsFilter, saveFilterData, setActiveKanbanDealsFilter } from '../../../store/filtersSlice';
 import { usePermissions } from '../../../features/common/usePermissions';
+import { useGetDeadlineFilterQuery } from '../../../features/filter/filterApi';
+import { useGetProfileSettingsQuery, useSetProfileSettingsMutation } from '../../../features/profileSettings';
 
 export interface IChanges {
   id: number;
@@ -85,20 +87,40 @@ export function Deals(props: DealsProps) {
   const [tabNo, setTabNo] = useState(0);
   const [openFilters, setOpenFilters] = useState(false);
   const [filteringData, setFilteringData] = useState<IFilteringData>({});
-
   const dispatch = useDispatch();
   const filtersStorage = useSelector((state: RootState) => state.filtersStorage);
   const kanbanFilter = filtersStorage.activeKanbanDealsFilter;
   const cardDateFilter = filtersStorage.kanbanDealsFilter.dateFilter;
   const user = useSelector<RootState, UserState>(state => state.user);
-
-  const { data: columns, isFetching: columnsIsFetching, isLoading, refetch } = useGetKanbanDealsQuery({
+  const userId = user.userProfile?.id;
+  const { data: settings, isFetching: settingsIsFetching } = useGetProfileSettingsQuery(userId || -1, { skip: !userId });
+  const [setSettings, { isLoading: updateIsLoading }] = useSetProfileSettingsMutation();
+  const { data: deadlineFilters, isLoading: deadlineFilterisLoading} = useGetDeadlineFilterQuery();
+  const activeDeadlineFilter = useMemo(()=>{
+    return deadlineFilters?.find(deadline => deadline.FILTERCODE === settings?.DEALSFILTER);
+  },[settings,deadlineFilters])
+  const { data: columns, isFetching: columnsIsFetching, isLoading: KanbanDealsIsLoading, refetch } = useGetKanbanDealsQuery({
     userId: user.userProfile?.id || -1,
     filter: {
-      deadline: kanbanFilter.deadline.ID,
+      deadline: activeDeadlineFilter,
       ...filteringData,
     }
   });
+
+  const updateDeadlineFilter = (dealsFilter: number) => {
+    if (!userId) {
+      return;
+    }
+    setSettings({
+      userId,
+      body: {
+        AVATAR: settings?.AVATAR || '',
+        COLORMODE: settings?.COLORMODE,
+        DEALSFILTER: dealsFilter
+      }
+    });
+
+  };
 
   useEffect(() => {
     setFilteringData(filtersStorage.filterData.deals);
@@ -156,7 +178,7 @@ export function Deals(props: DealsProps) {
   const [editDealIsFetching] = usePermissions(Action.EditDeal);
   const [deleteDealIsFetching] = usePermissions(Action.DeleteDeal);
 
-  const componentIsFetching = isLoading || createDealIsFetching || copyDealIsFetching || editDealIsFetching || deleteDealIsFetching;
+  const componentIsFetching = settingsIsFetching || updateIsLoading || deadlineFilterisLoading || KanbanDealsIsLoading || createDealIsFetching || copyDealIsFetching || editDealIsFetching || deleteDealIsFetching;
   const Header = useMemo(() => {
     return (
       <>
@@ -168,15 +190,15 @@ export function Deals(props: DealsProps) {
             style={{
               width: '210px',
             }}
-            options={cardDateFilter}
+            options={deadlineFilters || []}
             disableClearable
-            getOptionLabel={option => option.name}
-            isOptionEqualToValue={(option, value) => option.ID === value.ID}
-            value={kanbanFilter.deadline || null}
-            onChange={(e, value) => dispatch(setActiveKanbanDealsFilter({ ...kanbanFilter, deadline: value }))}
+            getOptionLabel={option => option.NAME}
+            isOptionEqualToValue={(option, value) => option.FILTERCODE === value.FILTERCODE}
+            value={activeDeadlineFilter}
+            onChange={(e, value) => updateDeadlineFilter(value.FILTERCODE)}
             renderOption={(props, option, { selected }) => (
-              <li {...props} key={option.ID}>
-                {option.name}
+              <li {...props} key={option.FILTERCODE}>
+                {option.NAME}
               </li>
             )}
             renderInput={(params) => (
@@ -231,7 +253,7 @@ export function Deals(props: DealsProps) {
       </>
     );
   }
-  , [kanbanFilter.deadline, tabNo, filteringData, columnsIsFetching]);
+  , [kanbanFilter.deadline, tabNo, filteringData, columnsIsFetching, activeDeadlineFilter]);
 
   const KanbanBoardMemo = useMemo(() => <KanbanBoard columns={columns} isLoading={componentIsFetching} />, [columns, componentIsFetching]);
 

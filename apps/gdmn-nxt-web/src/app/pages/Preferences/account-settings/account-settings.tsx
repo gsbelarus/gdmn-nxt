@@ -74,7 +74,8 @@ export function AccountSettings(props: AccountSettingsProps) {
       userId,
       body: {
         AVATAR: settings?.AVATAR || '',
-        COLORMODE: typeTheme
+        COLORMODE: typeTheme,
+        DEALSFILTER: settings?.DEALSFILTER
       }
     });
   };

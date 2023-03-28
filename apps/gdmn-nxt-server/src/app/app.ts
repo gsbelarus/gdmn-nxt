@@ -44,7 +44,9 @@ export const checkGedeminUser = async (userName: string, password: string): Prom
             id: data[0]['ID'],
             userName,
             firstname: data[0]['FIRSTNAME'],
-            surname: data[0]['SURNAME']
+            surname: data[0]['SURNAME'],
+            colorMode: data[0]['COLORMODE'],
+            dealsFilter: data[0]['DEALSFILTER']
           }
         };
       } else if (!data.length) {
@@ -69,7 +71,8 @@ export const getGedeminUser = async (userName: string): Promise<GedeminUser | un
       u.name,
       u.contactkey,
       p.RANK,
-      ps.USR$MODE as ColorMode
+      ps.USR$MODE as COLORMODE,
+      ps.USR$DEALS_FILTER as DEALSFILTER
     FROM
       gd_user u
       JOIN gd_contact c ON c.id = u.contactkey
@@ -91,6 +94,7 @@ export const getGedeminUser = async (userName: string): Promise<GedeminUser | un
           contactkey: data[0]['CONTACTKEY'],
           rank: data[0]['RANK'],
           colorMode: data[0]['COLORMODE'],
+          dealsFilter: data[0]['DEALSFILTER']
         };
       } else if (!data.length) {
         return undefined;

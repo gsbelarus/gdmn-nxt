@@ -31,7 +31,7 @@ import { Notifications } from './app/routes/notifications';
 import faqRouter from './app/routes/faqRouter';
 import cookieParser from 'cookie-parser';
 import RateLimit from 'express-rate-limit';
-
+import filterRouter from './app/routes/filterRouter'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const MemoryStore = require('memorystore')(session);
@@ -313,6 +313,9 @@ router.use(labelsRouter);
 
 /** FAQ*/
 router.use(faqRouter);
+
+/** Filter*/
+router.use(filterRouter);
 
 /** Contracts list */
 router.use(contractsListRouter);

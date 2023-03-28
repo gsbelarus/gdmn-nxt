@@ -146,7 +146,7 @@ export default function App(props: AppProps) {
       if (user.gedeminUser) {
         dispatch(signedInEmployee({ ...user }));
       } else {
-        dispatch(signedInCustomer({ userName: user.userName, id: user.id, contactkey: user.contactkey }));
+        dispatch(signedInCustomer({ userName: user.userName, id: user.id, contactkey: user.contactkey, colorMode: user.colorMode, dealsFilter: user.dealsFilter }));
       }
     }
   }, [loginStage, theme.palette.mode, user]);

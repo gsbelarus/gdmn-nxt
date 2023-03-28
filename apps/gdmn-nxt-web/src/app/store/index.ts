@@ -32,6 +32,7 @@ import { topEarningApi } from '../features/topEarning';
 import { businessProcessesApi } from '../features/business-processes';
 import { profileSettingsApi } from '../features/profileSettings';
 import { kanbanCatalogsApi } from '../features/kanban/kanbanCatalogsApi';
+import { filterApi } from '../features/filter/filterApi';
 
 export const store = configureStore({
   devTools: process.env.NODE_ENV === 'development',
@@ -67,6 +68,7 @@ export const store = configureStore({
     [businessProcessesApi.reducerPath]: businessProcessesApi.reducer,
     [profileSettingsApi.reducerPath]: profileSettingsApi.reducer,
     [faqApi.reducerPath]: faqApi.reducer,
+    [filterApi.reducerPath]: filterApi.reducer,
     [kanbanCatalogsApi.reducerPath]: kanbanCatalogsApi.reducer
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false })
@@ -96,7 +98,8 @@ export const store = configureStore({
     .concat(businessProcessesApi.middleware)
     .concat(profileSettingsApi.middleware)
     .concat(faqApi.middleware)
-    .concat(kanbanCatalogsApi.middleware),
+    .concat(filterApi.middleware)
+    .concat(kanbanCatalogsApi.middleware)
 });
 
 setupListeners(store.dispatch);

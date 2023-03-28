@@ -92,6 +92,7 @@ export interface IProfileSettings {
   AVATAR?: string | null;
   RANK?: string;
   COLORMODE?: ColorMode;
+  DEALSFILTER: number;
 }
 
 export enum ColorMode {
@@ -104,5 +105,6 @@ export type GedeminUser = {
   userName: string;
   contactkey: number;
   rank?: string;
-  colorMode?: ColorMode
+  colorMode?: ColorMode,
+  dealsFilter: number
 }
