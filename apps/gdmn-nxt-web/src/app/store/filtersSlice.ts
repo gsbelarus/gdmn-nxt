@@ -7,10 +7,9 @@ export interface IFiltersState {
   filterData: { [key: string]: IFilteringData };
   activeKanbanDealsFilter: IActiveKanbanDealsFilter,
   kanbanDealsFilter: IKanbanDealsFilter,
-  lastFilterData: { [key: string]: IFilteringData }
 };
 
-export interface IDateFilter { 
+export interface IDateFilter {
   ID: number,
   name: string
 }
@@ -59,8 +58,7 @@ const initialState: IFiltersState = {
       ID: 6,
       name: 'Все сделки'
     }
-  },
-  lastFilterData: {}
+  }
 };
 
 export const filtersSlice = createSlice({
@@ -74,7 +72,7 @@ export const filtersSlice = createSlice({
       return { ...state, filterModels: { ...state.filterModels, ...action.payload } };
     },
     clearFilterData: (state) => {
-      return { ...state, filterData: {}, lastFilterData: state.filterData };
+      return { ...state, filterData: {} };
     },
     setActiveKanbanDealsFilter: (state, action: PayloadAction<IActiveKanbanDealsFilter>) => {
       return { ...state, activeKanbanDealsFilter: { ...action.payload }}

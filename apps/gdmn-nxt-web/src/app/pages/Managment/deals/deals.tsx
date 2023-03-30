@@ -103,7 +103,7 @@ export function Deals(props: DealsProps) {
     userId: user.userProfile?.id || -1,
     filter: {
       deadline: activeDeadlineFilter,
-      ...filteringData,
+      ...filtersStorage.filterData.deals,
     }
   });
 
@@ -126,17 +126,12 @@ export function Deals(props: DealsProps) {
     setFilteringData(filtersStorage.filterData.deals);
   }, []);
 
-  useEffect(() => {
-    SaveFilters();
-  }, [filteringData]);
-
-  const SaveFilters = () => {
-    dispatch(saveFilterData({ 'deals': filteringData }));
-  };
-
   const refreshBoard = useCallback(() => refetch(), []);
 
   const filterHandlers = {
+    SaveFilters: () => {
+      dispatch(saveFilterData({ 'deals': filteringData }));
+    },
     filterClick: useCallback(() => {
       setOpenFilters(true);
     }, []),
@@ -154,9 +149,6 @@ export function Deals(props: DealsProps) {
 
       setFilteringData({});
     },
-    lastFilter: () => {
-      setFilteringData(filtersStorage.lastFilterData.deals);
-    },
     filteringDataChange: async(newValue: IFilteringData) => {
       setFilteringData(newValue);
     }
@@ -169,7 +161,7 @@ export function Deals(props: DealsProps) {
       onClose={filterHandlers.filterClose}
       onFilteringDataChange={filterHandlers.filteringDataChange}
       onFilterClear={filterHandlers.filterClear}
-      onLastFilter={filterHandlers.lastFilter}
+      onSave={filterHandlers.SaveFilters}
     />,
   [openFilters, filteringData]);
 

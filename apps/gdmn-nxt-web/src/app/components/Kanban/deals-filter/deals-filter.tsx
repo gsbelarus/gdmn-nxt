@@ -21,7 +21,7 @@ export interface DealsFilterProps {
   filteringData: IFilteringData;
   onFilteringDataChange: (arg: IFilteringData) => void;
   onFilterClear: () => void;
-  onLastFilter: () => void;
+  onSave: ()=>void
 }
 
 export function DealsFilter(props: DealsFilterProps) {
@@ -32,7 +32,7 @@ export function DealsFilter(props: DealsFilterProps) {
     filteringData,
     onFilteringDataChange,
     onFilterClear,
-    onLastFilter
+    onSave
   } = props;
 
   const { data, isFetching: customerFetching } = useGetCustomersQuery();
@@ -60,8 +60,8 @@ export function DealsFilter(props: DealsFilterProps) {
           <Stack spacing={3}>
             <TextField
               label="Номер заявки"
-              value={filteringData?.requestNumber || ''}
-              onChange={(e) => handleOnChange('requestNumber', e.target.value)}
+              defaultValue={filteringData?.requestNumber || ''}
+              onBlur={(e) => handleOnChange('requestNumber', e.target.value)}
             />
             <Autocomplete
               options={customers}
@@ -131,9 +131,12 @@ export function DealsFilter(props: DealsFilterProps) {
           <Button
             variant="contained"
             fullWidth
-            onClick={onLastFilter}
+            onClick={() => {
+              onSave();
+              onClose && onClose({}, 'backdropClick');
+            }}
           >
-            Последний фильтр
+            Применить
           </Button>
           <Button
             variant="contained"
@@ -158,12 +161,6 @@ export function DealsFilter(props: DealsFilterProps) {
     >
       <Filter />
     </CustomizedDialog>
-  );
-
-  return (
-    <div className={styles.container}>
-      <h1>Welcome to DealsFilter!</h1>
-    </div>
   );
 }
 
