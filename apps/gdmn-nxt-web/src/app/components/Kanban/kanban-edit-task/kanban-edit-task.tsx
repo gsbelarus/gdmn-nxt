@@ -192,7 +192,7 @@ export function KanbanEditTask(props: KanbanEditTaskProps) {
                     required
                     autoFocus
                     multiline
-                    minRows={1}
+                    minRows={3}
                   />
                   <Autocomplete
                     options={employees || []}
