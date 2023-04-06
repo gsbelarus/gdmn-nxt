@@ -123,7 +123,7 @@ const upsert: RequestHandler = async (req, res) => {
       (ID, USR$CARDKEY, USR$NAME, USR$CLOSED, USR$DEADLINE, USR$PERFORMER, USR$CREATORKEY)
       VALUES(?, ?, ?, ?, ?, ?, ?)
       MATCHING(ID)
-      RETURNING ID`;
+      RETURNING ID, USR$CARDKEY`;
 
     let id = parseInt(req.params.id) || -1;
     if (id <= 0) {
@@ -197,7 +197,7 @@ const remove: RequestHandler = async(req, res) => {
       return res.status(500).send(resultError('Объект не найден'));
     }
 
-    return res.status(200).json({ 'id': id });
+    return res.status(200).json({ 'ID': id });
   } catch (error) {
     return res.status(500).send(resultError(error.message));
   } finally {

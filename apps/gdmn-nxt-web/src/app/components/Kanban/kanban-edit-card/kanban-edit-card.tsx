@@ -716,7 +716,7 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
                     {KanbanRequestInfo}
                   </TabPanel>
                   <TabPanel value="3" className={tabIndex === '3' ? classes.tabPanel : ''}>
-                    <KanbanTasks card={card} />
+                    <KanbanTasks card={card} formik={formik} />
                   </TabPanel>
                   <TabPanel value="4" className={tabIndex === '4' ? classes.tabPanel : ''}>
                     <CustomizedCard

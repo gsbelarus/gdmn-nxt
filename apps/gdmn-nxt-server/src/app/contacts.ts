@@ -73,7 +73,6 @@ export const getContacts: RequestHandler = async (req, res) => {
             c.name,
             c.phone,
             c.email,
-            c.parent,
             comp.taxid,
             c.address,
             com.FULLNAME,
@@ -227,7 +226,6 @@ export const getContacts: RequestHandler = async (req, res) => {
         NAME: c.NAME || '<не указано>',
         LABELS,
         BUSINESSPROCESSES,
-        FOLDERNAME: folders[c.PARENT]
       };
     });
 
@@ -249,7 +247,7 @@ export const getContacts: RequestHandler = async (req, res) => {
 
 export const updateContact: RequestHandler = async (req, res) => {
   const { id: ID } = req.params;
-  const { NAME, PHONE, EMAIL, PARENT, ADDRESS } = req.body;
+  const { NAME, PHONE, EMAIL, ADDRESS } = req.body;
   const { attachment, transaction, releaseTransaction, executeQuery, fetchAsObject } = await startTransaction(req.sessionID);
 
   try {
@@ -260,10 +258,9 @@ export const updateContact: RequestHandler = async (req, res) => {
           NAME = ?,
           PHONE = ?,
           EMAIL = ?,
-          PARENT = ?,
           ADDRESS = ?
         WHERE ID = ?`,
-      [NAME, PHONE, EMAIL, PARENT, ADDRESS, ID]);
+      [NAME, PHONE, EMAIL, ADDRESS, ID]);
     } catch (error) {
       return res.status(500).send({ 'errorMessage': error.message });
     }
@@ -271,14 +268,11 @@ export const updateContact: RequestHandler = async (req, res) => {
     const row = await fetchAsObject(`
       SELECT
         con.ID,
-        con.PARENT,
         con.NAME,
         con.EMAIL,
         con.PHONE,
-        par.NAME,
         con.ADDRESS
       FROM GD_CONTACT con
-      JOIN GD_CONTACT par ON par.ID = con.PARENT
       WHERE con.ID = :ID`,
     { ID });
 
@@ -304,7 +298,7 @@ export const upsertContact: RequestHandler = async (req, res) => {
 
   if (id && !parseInt(id)) return res.status(422).send(resultError('Field ID is not defined or is not numeric'));
 
-  const { NAME, PHONE, EMAIL, PARENT, ADDRESS, TAXID, LABELS, BUSINESSPROCESSES } = req.body;
+  const { NAME, PHONE, EMAIL, ADDRESS, TAXID, LABELS, BUSINESSPROCESSES } = req.body;
   const { attachment, transaction } = await startTransaction(req.sessionID);
 
   try {
@@ -332,7 +326,6 @@ export const upsertContact: RequestHandler = async (req, res) => {
           in_NAME  TYPE OF COLUMN GD_CONTACT.NAME = ?,
           in_EMAIL TYPE OF COLUMN GD_CONTACT.EMAIL = ?,
           in_PHONE TYPE OF COLUMN GD_CONTACT.PHONE = ?,
-          in_PARENT TYPE OF COLUMN GD_CONTACT.PARENT = ?,
           in_ADDRESS TYPE OF COLUMN GD_CONTACT.ADDRESS = ?,
           in_TAXID TYPE OF COLUMN GD_COMPANYCODE.TAXID = ?
         )
@@ -341,20 +334,17 @@ export const upsertContact: RequestHandler = async (req, res) => {
           NAME  TYPE OF COLUMN GD_CONTACT.NAME,
           EMAIL TYPE OF COLUMN GD_CONTACT.EMAIL,
           PHONE TYPE OF COLUMN GD_CONTACT.PHONE,
-          PARENT TYPE OF COLUMN GD_CONTACT.PARENT,
-          FOLDERNAME TYPE OF COLUMN GD_CONTACT.NAME,
           ADDRESS TYPE OF COLUMN GD_CONTACT.ADDRESS,
           AXID TYPE OF COLUMN GD_COMPANYCODE.TAXID
         )
         AS
         BEGIN
           UPDATE OR INSERT INTO GD_CONTACT(ID, CONTACTTYPE, PARENT, NAME, PHONE, EMAIL, ADDRESS)
-          VALUES(:in_ID, 3, IIF(:in_PARENT IS NULL, (SELECT ID FROM GD_RUID WHERE XID = 147002208 AND DBID = 31587988 ROWS 1), :in_PARENT), :in_NAME, :in_PHONE, :in_EMAIL, :in_ADDRESS)
+          VALUES(:in_ID, 3, (SELECT ID FROM GD_RUID WHERE XID = 147002208 AND DBID = 31587988 ROWS 1), :in_NAME, :in_PHONE, :in_EMAIL, :in_ADDRESS)
           MATCHING(ID)
-          RETURNING ID, PARENT, NAME, PHONE, EMAIL, ADDRESS
-          INTO :ID, :PARENT, :NAME, :PHONE, :EMAIL, :ADDRESS;
-          SELECT NAME FROM GD_CONTACT WHERE ID = :PARENT
-          INTO :FOLDERNAME;
+          RETURNING ID, NAME, PHONE, EMAIL, ADDRESS
+          INTO :ID, :NAME, :PHONE, :EMAIL, :ADDRESS;
+
           IF (ID IS NOT NULL) THEN
             UPDATE OR INSERT INTO GD_COMPANY(CONTACTKEY)
             VALUES(:ID)
@@ -367,7 +357,7 @@ export const upsertContact: RequestHandler = async (req, res) => {
             INTO :in_TAXID;
           SUSPEND;
         END`,
-      params: [ID, NAME, EMAIL, PHONE, PARENT, ADDRESS, TAXID],
+      params: [ID, NAME, EMAIL, PHONE, ADDRESS, TAXID],
     };
 
 
@@ -441,7 +431,6 @@ export const getContactHierarchy : RequestHandler = async (req, res) => {
             z.ID,
             z.LB,
             z.RB,
-            z.PARENT,
             z.NAME
           FROM
             GD_CONTACT z

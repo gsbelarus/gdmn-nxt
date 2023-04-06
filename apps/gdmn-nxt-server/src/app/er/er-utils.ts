@@ -735,7 +735,7 @@ export const importModels = async () => {
       }
 
       if (!entity.adapter) {
-        console.warn(`No adapter for entity ${entity.name} found`);
+        // console.warn(`No adapter for entity ${entity.name} found`);
         continue;
       }
 
@@ -749,7 +749,7 @@ export const importModels = async () => {
         const arf = atRelationFields[relation];
 
         if (!arf) {
-          console.warn(`No fields definitions for ${entity.adapter.name} found...`);
+          // console.warn(`No fields definitions for ${entity.adapter.name} found...`);
           continue;
         }
 
@@ -832,13 +832,13 @@ export const importModels = async () => {
 
     const dumpErModel = JSON.stringify(erModel, undefined, 2);
 
-    console.log(`
-      ERModel imported in ${new Date().getTime() - t} ms
-      size of erModel: ${(new TextEncoder().encode(dumpErModel)).length} bytes
-      domains: ${Object.keys(domains).length}
-      entities: ${Object.keys(entities).length}
-      attributes: ${Object.values(entities).flatMap( e => e.attributes ).length}
-    `);
+    // console.log(`
+    //   ERModel imported in ${new Date().getTime() - t} ms
+    //   size of erModel: ${(new TextEncoder().encode(dumpErModel)).length} bytes
+    //   domains: ${Object.keys(domains).length}
+    //   entities: ${Object.keys(entities).length}
+    //   attributes: ${Object.values(entities).flatMap( e => e.attributes ).length}
+    // `);
 
     const stripAdapter = (attr: Attr) => {
       if (isSeqAttr(attr)) {

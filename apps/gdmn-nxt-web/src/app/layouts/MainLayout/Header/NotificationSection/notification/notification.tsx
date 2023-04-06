@@ -22,8 +22,9 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 import 'react-perfect-scrollbar/dist/css/styles.css';
 import NotificationList from '../notification-list/notification-list';
 import NotificationsOffOutlinedIcon from '@mui/icons-material/NotificationsOffOutlined';
-import { IMessage, socketClient } from '@gdmn-nxt/socket';
+import { ClientToServerEvents, IMessage, ServerToClientEvents, getSocketClient } from '@gdmn-nxt/socket';
 import logo from './NoNotifications.png'; // with import
+import { Socket } from 'socket.io-client';
 
 const useStyles = makeStyles((theme: Theme) => ({
   popper: {
@@ -97,21 +98,23 @@ export interface NotificationProps {}
 
 export function Notification(props: NotificationProps) {
   const classes = useStyles();
-
-  // console.log('Notification', logo);
-  // console.log('users', socketClient);
-
   const [open, setOpen] = useState(false);
   const [anchorProfileEl, setAnchorProfileEl] = useState(null);
   const [arrowRef, setArrowRef] = useState<HTMLElement | null>(null);
   // const arrowRef = useRef<HTMLElement | null>(null);
   const [fadeOut, setFadeOut] = useState(false);
+  const [socketClient, setsocketClient] = useState<Socket<ServerToClientEvents, ClientToServerEvents>>();
 
   const [messages, setMessages] = useState<IMessage[]>([]);
 
-  // console.log('Notification');
+  useEffect(() => {
+    const socket = getSocketClient('notifications');
+    setsocketClient(socket);
+  }, []);
 
   useEffect(() => {
+    if (!socketClient) return;
+
     socketClient?.on?.('messages', (data: IMessage[]) => {
       setMessages(data);
     });

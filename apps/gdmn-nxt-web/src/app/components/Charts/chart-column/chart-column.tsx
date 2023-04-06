@@ -12,25 +12,7 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import LinearIndeterminate from '../../linear-indeterminate/linear-indeterminate';
 import { useGetWorkTypesQuery } from '../../../features/work-types/workTypesApi';
 import { useGetCustomerContractsQuery } from '../../../features/customer-contracts/customerContractsApi';
-import { Skeleton } from '@mui/material';
-
-const ChartSkeleton = () => {
-  return(
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Skeleton variant="text" height={'40px'} width={'180px'} />
-        <Skeleton variant="rectangular" height={'60px'} width={'100px'} style={{ borderRadius: '12px' }} />
-      </div>
-      <div style={{ display: 'flex', marginBottom: '40px' }}>
-        <Skeleton variant="rectangular" height={'60px'} width={'100%'} style={{ borderRadius: '12px' }}/>
-        <Skeleton variant="rectangular" height={'60px'} width={'100%'} style={{ marginLeft: '10px', borderRadius: '12px' }}/>
-        <Skeleton variant="rectangular" height={'60px'} width={'100%'} style={{ marginLeft: '10px', borderRadius: '12px' }}/>
-      </div>
-      <Skeleton variant="rectangular" height={'70%'} />
-      <Skeleton variant="rectangular" height={'80px'} style={{ borderRadius: '12px' }}/>
-    </>
-  )
-}
+import ChartSkeleton from './chart-skeleton';
 
 interface IPeriodType {
   id: number;
@@ -295,7 +277,7 @@ export function ChartColumn(props: ChartColumnProps) {
     >
       <Stack direction="column" spacing={3} p={2} flex={1} display="flex" style={{ maxWidth: '100%', padding: analyticsDataIsLoading ? '15.8px 15.8px' : '15.8px 0'  }} >
         {analyticsDataIsLoading
-          ? <ChartSkeleton /> 
+          ? <ChartSkeleton />
           : <>
             <Stack direction="row" spacing={1}>
               <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
@@ -333,10 +315,12 @@ export function ChartColumn(props: ChartColumnProps) {
               spacing={1}
               ref={ref}
               style={{
-                width: '100%'
+                width: '100%',
+                paddingRight:'15.8px',
+                paddingLeft:'7.8px'
               }}
             >
-              <Grid item xs={4} style={{paddingLeft:'15.8px'}}>
+              <Grid item xs={4}>
                 <Autocomplete
                   multiple
                   filterOptions={filterOptions(50, 'NAME')}
@@ -391,7 +375,7 @@ export function ChartColumn(props: ChartColumnProps) {
                   )}
                 />
               </Grid>
-              <Grid item xs={4} style={{paddingRight:'15.8px'}}>
+              <Grid item xs={4}>
                 <Autocomplete
                   multiple
                   filterOptions={filterOptions(50, 'USR$NAME')}
@@ -431,7 +415,7 @@ export function ChartColumn(props: ChartColumnProps) {
                 type="bar"
               />
             </Box>
-            <Autocomplete 
+            <Autocomplete
               style={{paddingLeft:'15.8px', paddingRight:'15.8px'}}
               multiple
               disableCloseOnSelect

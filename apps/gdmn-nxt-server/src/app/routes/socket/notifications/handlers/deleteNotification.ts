@@ -1,5 +1,5 @@
-import { resultError } from '../../../responseMessages';
-import { startTransaction } from '../../../utils/db-connection';
+import { resultError } from '../../../../responseMessages';
+import { startTransaction } from '../../../../utils/db-connection';
 
 export const deleteNotification = async (sessionId: string, id: number) => {
   if (isNaN(id)) return;

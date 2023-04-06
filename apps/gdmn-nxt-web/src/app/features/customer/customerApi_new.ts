@@ -31,6 +31,8 @@ type ICustomersWithCountRequestResult = IRequestResult<{contacts: ICustomer[], r
 type ICustomerRequestResult = IRequestResult<{ contact: ICustomer }>;
 type ICustomersCrossRequestResult = IRequestResult<{ cross: ICustomerCross[] }>;
 
+let lastOptions: Partial<IQueryOptions>;
+
 export const customerApi = createApi({
   reducerPath: 'customer',
   tagTypes: ['Customers'],
@@ -48,6 +50,8 @@ export const customerApi = createApi({
     getCustomers: builder.query<{data: ICustomer[], count?: number}, Partial<IQueryOptions> | void>({
       query(options) {
         const params: string[] = [];
+
+        if (options) lastOptions = options;
 
         // console.log('options', options);
 
@@ -108,20 +112,20 @@ export const customerApi = createApi({
         };
       },
       transformResponse: (response: ICustomerRequestResult) => response.queries?.contact,
-      invalidatesTags: (result, error) =>
-        result
-          ? [{ type: 'Customers', id: result?.ID }, { type: 'Customers', id: 'LIST' }]
-          : error
-            ? [{ type: 'Customers', id: 'ERROR' }]
-            : [{ type: 'Customers', id: 'LIST' }],
+      // invalidatesTags: (result, error) =>
+      //   result
+      //     ? [{ type: 'Customers', id: result?.ID }, { type: 'Customers', id: 'LIST' }]
+      //     : error
+      //       ? [{ type: 'Customers', id: 'ERROR' }]
+      //       : [{ type: 'Customers', id: 'LIST' }],
       async onQueryStarted(newCustomer, { dispatch, queryFulfilled }) {
         console.info('⏩ request', 'PUT', `${baseUrlApi}contacts`);
         const patchResult = dispatch(
-          customerApi.util.updateQueryData('getCustomers', undefined, (draft) => {
+          customerApi.util.updateQueryData('getCustomers', lastOptions, (draft) => {
             if (Array.isArray(draft.data)) {
-              const index = draft.data?.findIndex(c => c.ID = newCustomer.ID);
-              if (index >= 0) {
-                draft.data[index] = newCustomer;
+              const findIndex = draft.data?.findIndex(c => c.ID = newCustomer.ID);
+              if (findIndex >= 0) {
+                draft.data[findIndex] = {...draft.data[findIndex], ...newCustomer};
               }
             }
           })
@@ -140,38 +144,56 @@ export const customerApi = createApi({
         body
       }),
       transformResponse: (response: ICustomerRequestResult) => response.queries?.contact,
-      async onQueryStarted({ ID, ...patch }, { dispatch, queryFulfilled }) {
+      async onQueryStarted({ ID, ...patch }, { dispatch, queryFulfilled, extra }) {
+        console.log('⏩ request', 'POST', `${baseUrlApi}constacts`);
         const { data: addedCustomer } = await queryFulfilled;
+
         const patchResult = dispatch(
-          customerApi.util.updateQueryData('getCustomers', undefined, (draft) => {
+          customerApi.util.updateQueryData('getCustomers', lastOptions, (draft) => {
             if (Array.isArray(draft.data)) {
-              draft.data?.push(addedCustomer);
+              draft.data.unshift(addedCustomer);
               if (draft.count) draft.count += 1;
             }
           })
         );
       },
-      // invalidatesTags: (result, error) =>
-      //   result
-      //     ? [{ type: 'Customers', id: 'LIST' }]
-      //     : error
-      //       ? [{ type: 'Customers', id: 'ERROR' }]
-      //       : [{ type: 'Customers', id: 'LIST' }]
+      invalidatesTags: (result, error) =>
+        result
+          ? [{ type: 'Customers', id: 'LIST' }]
+          : error
+            ? [{ type: 'Customers', id: 'ERROR' }]
+            : [{ type: 'Customers', id: 'LIST' }]
     }),
     deleteCustomer: builder.mutation<{id: number}, number>({
       query: (id) => ({
         url: `contacts/${id}`,
         method: 'DELETE'
       }),
-      onQueryStarted(id) {
+      async onQueryStarted(id, {dispatch, queryFulfilled}) {
         console.log('⏩ request', 'DELETE', `${baseUrlApi}constacts/${id}`);
-      },
-      invalidatesTags: (result, error, arg) => {
-        // console.log('result', result);
-        // console.log('arg', id);
 
-        return [{ type: 'Customers', id: result?.id }, { type: 'Customers', id: 'LIST' }];
-      }
+        const deleteResult = dispatch(
+          customerApi.util.updateQueryData('getCustomers', lastOptions, (draft) => {
+            if (Array.isArray(draft.data)) {
+              const findIndex = draft.data.findIndex(d => d.ID === id);
+
+              if (findIndex >=0 ) {
+                draft.data.splice(findIndex, 1);
+                if (draft.count) draft.count -= 1;
+              }
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch (error) {
+          deleteResult.undo();
+        }
+      },
+      // invalidatesTags: (result, error, arg) => {
+      //   return [{ type: 'Customers', id: result?.id }, { type: 'Customers', id: 'LIST' }];
+      // }
     }),
     getCustomersCross: builder.query<ICustomerCross, void>({
       query() {

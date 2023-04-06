@@ -2,6 +2,7 @@ interface IConfig {
   host: string;
   port: number;
   notificationPort: number;
+  streamingUpdatePort: number;
   appPort: number;
   env?: string;
 }
@@ -21,8 +22,10 @@ const port = (() => {
 const notificationPort = (() => {
   return process.env.NODE_ENV === 'development'
     ? 5555
-    : Number(process.env.NX_SOCKET_PORT);
+    : Number(process.env.NX_SOCKET_NOTIFICATIONS_PORT);
 })();
+
+const streamingUpdatePort = Number(process.env.NX_SOCKET_STREAMING_UPDATE_PORT);
 
 const appPort = (() => {
   return process.env.NODE_ENV === 'development'
@@ -30,10 +33,12 @@ const appPort = (() => {
     : Number(process.env.NX_APP_PORT);
 })();
 
+
 export const config: IConfig = {
   host,
   port,
   notificationPort,
+  streamingUpdatePort,
   appPort,
   env: process.env.NODE_ENV || '123'
 };

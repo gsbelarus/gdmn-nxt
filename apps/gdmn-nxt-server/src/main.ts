@@ -27,11 +27,13 @@ import labelsRouter from './app/routes/labelsRouter';
 import permissionsRouter from './app/routes/permissionsRouter';
 import businessProcessRouter from './app/routes/businessProcess';
 import profileSettingsRouter from './app/routes/profileSettings';
-import { Notifications } from './app/routes/notifications';
 import faqRouter from './app/routes/faqRouter';
 import cookieParser from 'cookie-parser';
 import RateLimit from 'express-rate-limit';
+import { Notifications } from './app/routes/socket/notifications';
+import { StreamingUpdate } from './app/routes/socket/streamingUpdate';
 import filterRouter from './app/routes/filterRouter'
+
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const MemoryStore = require('memorystore')(session);
@@ -204,30 +206,40 @@ const middlewares = [
 
 app.use(middlewares);
 
-app.get('/test', (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.send(`Authenticated!\n${JSON.stringify(req.user, undefined, 2)}`);
-  } else {
-    return res.send('Not authenticated!');
-  }
-});
+const router = express.Router();
 
-app.get('/user', (req, res) => {
+app.use(apiRoot.v1, router);
+
+// app.get('/test', (req, res) => {
+//   if (req.isAuthenticated()) {
+//     return res.send(`Authenticated!\n${JSON.stringify(req.user, undefined, 2)}`);
+//   } else {
+//     return res.send('Not authenticated!');
+//   }
+// });
+
+router.get('/user', (req, res) => {
   if (req.isAuthenticated()) {
     res.cookie('userId', req.user?.['id']);
     res.cookie('color-mode', req.user?.['colorMode'] || ColorMode.Light);
-    res.json(req.user);
+    return res.json({
+      result: true,
+      user: req.user,
+    }
+    );
   } else {
-    res.json({ success: false });
+    return res.json({
+      result: false,
+      user: null,
+    })
   }
 });
 
-app.route('/user/signin')
+router.route('/user/signin')
   .post(
-    passport.authenticate('local', {}),
+    passport.authenticate('local'),
     (req, res) => {
       const { userName } = req.body;
-
       return res.json(authResult(
         'SUCCESS',
         `Вы вошли как ${userName}.`
@@ -235,7 +247,7 @@ app.route('/user/signin')
     },
   );
 
-app.route('/user/forgot-password')
+router.route('/user/forgot-password')
   .post(
     async (req, res) => {
       const { email } = req.body;
@@ -248,7 +260,7 @@ app.route('/user/forgot-password')
       return res.sendStatus(500);
     });
 
-app.get('/logout', (req, res) => {
+router.get('/logout', (req, res) => {
   if (req.session) {
     req.session.destroy(err => {
       if (err) console.error(err);
@@ -257,7 +269,7 @@ app.get('/logout', (req, res) => {
   res.sendStatus(200);
 });
 
-const router = express.Router();
+
 
 router.use(
   (req, res, next) => {
@@ -268,14 +280,16 @@ router.use(
   }
 );
 
+// router.get('/test', (req, res) => {
+//   if (req.isAuthenticated()) {
+//     return res.send(`from router: Authenticated!\n${JSON.stringify(req.user, undefined, 2)}`);
+//   } else {
+//     return res.send('from router: Not authenticated!');
+//   }
+// });
 
-router.get('/test', (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.send(`from router: Authenticated!\n${JSON.stringify(req.user, undefined, 2)}`);
-  } else {
-    return res.send('from router: Not authenticated!');
-  }
-});
+/** Streaming updates module */
+StreamingUpdate();
 
 /** Notifications module */
 Notifications({ router });
@@ -362,8 +376,6 @@ router.get('/er-model/make-sql', async (_, res) => {
   const { erModel } = await importedModels;
   res.json(erModel);
 });
-
-app.use(apiRoot.v1, router);
 
 if (process.env.NODE_ENV !== 'development') {
   app.get('*', (req, res) => {

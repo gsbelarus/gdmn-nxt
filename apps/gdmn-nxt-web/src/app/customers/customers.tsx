@@ -37,6 +37,7 @@ import { useGetCustomerContractsQuery } from '../features/customer-contracts/cus
 import { useGetBusinessProcessesQuery } from '../features/business-processes';
 import style from './customers.module.less';
 import DataField from './dataField/DataField';
+import { LoadingButton } from '@mui/lab';
 
 const useStyles = makeStyles((theme: Theme) => ({
   DataGrid: {
@@ -527,7 +528,26 @@ export function Customers(props: CustomersProps) {
               </Box>
               <Box flex={1} />
               <Box>{memoSearchBar}</Box>
-              <Box display="flex" justifyContent="center">
+              <Box display="flex" justifyContent="center" width={30}>
+                <LoadingButton
+                  loading={customerFetching}
+                  onClick={() => customerRefetch()}
+                  variant="text"
+                  size="medium"
+                  style={{
+                    minWidth: 30,
+                    borderRadius: '12px'
+                  }}
+                >
+                  <RefreshIcon
+                    style={{
+                      display: customerFetching ? 'none' : 'inline',
+                    }}
+                    color={'primary'}
+                  />
+                </LoadingButton>
+              </Box>
+              <Box display="flex" justifyContent="center" width={30}>
                 <IconButton
                   onClick={filterHandlers.handleFilter}
                   disabled={customerFetching}

@@ -1,5 +1,9 @@
+import { config } from '@gdmn-nxt/config';
+import { KanbanEvent, SocketRoom, getSocketClient, setSocketClient } from '@gdmn-nxt/socket';
 import { IContactWithID, IDenyReason, IKanbanCard, IKanbanColumn, IKanbanHistory, IKanbanTask, IRequestResult } from '@gsbelarus/util-api-types';
+import { createEntityAdapter } from '@reduxjs/toolkit';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/dist/query/react';
+import { io } from 'socket.io-client';
 import { baseUrlApi } from '../../const';
 
 interface IKanban{
@@ -25,6 +29,13 @@ export interface IDealsQueryOptions {
   userId?: number;
   filter?: IFilteringData;
 };
+
+const socketClient = setSocketClient('streamingUpdate', {
+  url: `http://${config.host}:${config.streamingUpdatePort}`,
+  userId: -1
+});
+
+socketClient.emit('joinToRoom', SocketRoom.KanbanBoard);
 
 export const kanbanApi = createApi({
   reducerPath: 'kanban',
@@ -65,17 +76,171 @@ export const kanbanApi = createApi({
           }
         };
 
-        // console.log('getKanbanDeals', params.join('&'));
-
         return {
           url: `kanban/data/deals?${params.join('&')}`,
           method: 'GET'
         };
       },
-      async onQueryStarted() {
-        console.log('⏩ request', 'GET', `${baseUrlApi}kanban/data/deals`);
+      // async onQueryStarted() {
+      //   console.log('⏩ request', 'GET', `${baseUrlApi}kanban/data/deals`);
+      // },
+      async onCacheEntryAdded(
+        arg,
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved }
+      ) {
+        try {
+          await cacheDataLoaded;
+
+          socketClient.on(KanbanEvent.AddColumn, (column) => {
+            updateCachedData((draft) => {
+              draft.push(column)
+            })
+          });
+
+          socketClient.on(KanbanEvent.UpdateColumn, (column) => {
+            updateCachedData((draft) => {
+              const findIndex = draft.findIndex(d => d.ID === column.ID);
+              draft[findIndex] = {...draft[findIndex], USR$NAME: column.USR$NAME};
+            })
+          });
+
+          socketClient.on(KanbanEvent.DeleteColumn, (id) => {
+            updateCachedData((draft) => {
+              draft.splice(0, draft.length, ...draft.filter(column => {
+                return column.ID !== Number(id);
+              }));
+            })
+          });
+
+          socketClient.on(KanbanEvent.AddCard, (columnId, card) => {
+            updateCachedData((draft) => {
+              draft.forEach(column => {
+                if (column.ID === Number(columnId)) {
+                  column.CARDS.push(card);
+                }
+              })
+            })
+          });
+
+          socketClient.on(KanbanEvent.UpdateCard, (columnId, card) => {
+            updateCachedData((draft) => {
+              draft.forEach((column, idx, columns) => {
+                const findCardIndex = column.CARDS?.findIndex(c => c.ID === card.ID);
+                if (findCardIndex >= 0) {
+                  const findedCard = column.CARDS[findCardIndex];
+
+                  /** Если переместили в другую колонку */
+                  if (findedCard.USR$MASTERKEY !== card.USR$MASTERKEY) {
+                    const sourceColumn = columns.find(c => c.ID === findedCard.USR$MASTERKEY);
+                    if (sourceColumn) {
+                      sourceColumn.CARDS?.splice(
+                        0,
+                        sourceColumn.CARDS?.length,
+                        ...sourceColumn.CARDS?.filter(c => c.ID !== Number(card.ID))
+                      );
+                    }
+
+                    const targetColumn = columns.find(c => c.ID === card.USR$MASTERKEY);
+                    if (targetColumn) {
+                      targetColumn.CARDS.unshift({...findedCard, ...card});
+                    }
+
+                  } else {
+                    column.CARDS[findCardIndex] = {...column.CARDS[findCardIndex], ...card};
+                  }
+                }
+              })
+            })
+          });
+
+          socketClient.on(KanbanEvent.DeleteCard, (columnId, cardId) => {
+            updateCachedData((draft) => {
+              draft.forEach(column => {
+                if (column.ID !== Number(columnId)) return;
+                column.CARDS?.splice(0, column.CARDS?.length, ...column.CARDS?.filter(card => card.ID !== Number(cardId)));
+              })
+            })
+          });
+
+          socketClient.on(KanbanEvent.ReorderCards, (columnId, cards) => {
+            updateCachedData((draft) => {
+              const findIndex = draft.findIndex(d => d.ID === Number(columnId));
+              if (!draft[findIndex]?.CARDS.length) return;
+              draft[findIndex].CARDS = [...cards];
+            })
+          });
+
+          socketClient.on(KanbanEvent.AddTask, (cardId, task) => {
+            updateCachedData((draft) => {
+              draft.every(column => {
+                const findCardIndex = column.CARDS.findIndex(c => {
+                  return c.ID === Number(cardId);
+                });
+                if (findCardIndex < 0) return true;
+
+                const tasks = column.CARDS[findCardIndex].TASKS;
+                column.CARDS[findCardIndex].TASKS = [...tasks || [], task];
+                return false;
+              })
+            })
+          });
+
+          socketClient.on(KanbanEvent.UpdateTask, (cardId, task) => {
+            updateCachedData((draft) => {
+              draft.forEach(column => {
+                const findCardIndex = column.CARDS.findIndex(c => c.ID === Number(cardId));
+                if (findCardIndex < 0) return;
+
+                const findTaskIndex = column.CARDS[findCardIndex].TASKS?.findIndex(t => t.ID === Number(task.ID)) ?? -1;
+                if (findTaskIndex < 0) return;
+
+                const tasks = column.CARDS[findCardIndex].TASKS;
+                if (!tasks?.length) return;
+
+                tasks[findTaskIndex] = {...tasks[findTaskIndex], ...task};
+              })
+
+            });
+          });
+
+          socketClient.on(KanbanEvent.DeleteTask, (taskId) => {
+            updateCachedData((draft) => {
+              draft.forEach(column => {
+                const cards = column.CARDS;
+                if (!cards.length) return;
+
+                cards.every(card => {
+                  const tasks = card.TASKS;
+                  if (!tasks?.length) return true;
+
+                  const findIndex = tasks.findIndex(task => {
+                    return task.ID === Number(taskId);
+                  });
+                  if (findIndex < 0) return true;
+
+                  tasks.splice(findIndex, 1);
+                  return false;
+                });
+              });
+            });
+          });
+
+        } catch (error) {
+        }
+        await cacheEntryRemoved;
+
+        socketClient.off(KanbanEvent.AddColumn);
+        socketClient.off(KanbanEvent.UpdateColumn);
+        socketClient.off(KanbanEvent.DeleteColumn);
+        socketClient.off(KanbanEvent.AddCard);
+        socketClient.off(KanbanEvent.UpdateCard);
+        socketClient.off(KanbanEvent.DeleteCard);
+        socketClient.off(KanbanEvent.ReorderCards);
+        socketClient.off(KanbanEvent.AddTask);
+        socketClient.off(KanbanEvent.UpdateTask);
+        socketClient.off(KanbanEvent.DeleteTask);
       },
-      transformResponse: (response: IKanbanRequestResult) => response.queries?.columns || [],
+      transformResponse: async (response: IKanbanRequestResult) => response.queries?.columns || [],
       providesTags: (result, error) =>
         result
           ? [
@@ -85,7 +250,6 @@ export const kanbanApi = createApi({
           : error
             ? [{ type: 'Column', id: 'ERROR' }]
             : [{ type: 'Column', id: 'LIST' }]
-
     }),
     updateColumn: builder.mutation<IKanbanColumn[], Partial<IKanbanColumn>>({
       query(body) {
@@ -96,7 +260,14 @@ export const kanbanApi = createApi({
           body: body
         };
       },
-      transformResponse: (response: IKanbanRequestResult) => response.queries?.columns || [],
+      transformResponse: (response: IKanbanRequestResult) => {
+        const result = response.queries?.columns || [];
+
+        if (result.length) {
+          socketClient.emit(KanbanEvent.UpdateColumn, result[0]);
+        }
+        return result;
+      },
       invalidatesTags: (result, error) => {
         return result
           ? [
@@ -106,7 +277,7 @@ export const kanbanApi = createApi({
           : error
             ? [{ type: 'Column', id: 'ERROR' }]
             : [{ type: 'Column', id: 'LIST' }];
-      }
+      },
     }),
     addColumn: builder.mutation<IKanbanColumn[], Partial<IKanbanColumn>>({
       query(body) {
@@ -116,7 +287,15 @@ export const kanbanApi = createApi({
           body: body
         };
       },
-      transformResponse: (response: IKanbanRequestResult) => response.queries?.columns || [],
+      transformResponse: (response: IKanbanRequestResult) => {
+        const result = response.queries?.columns || [];
+
+        if (result.length) {
+          socketClient.emit(KanbanEvent.AddColumn, result[0]);
+        }
+
+        return result;
+      },
       invalidatesTags: (result, error) => {
         return result
           ? [{ type: 'Column', id: 'LIST' }]
@@ -134,6 +313,10 @@ export const kanbanApi = createApi({
       },
       invalidatesTags: (result, error) => {
         const id = result?.id;
+
+        if (id) {
+          socketClient.emit(KanbanEvent.DeleteColumn, id);
+        }
 
         return result
           ? [
@@ -170,7 +353,15 @@ export const kanbanApi = createApi({
           body: body
         };
       },
-      transformResponse: (response: IKanbanRequestResult) => response.queries?.cards || [],
+      transformResponse: (response: IKanbanRequestResult, meta, body) => {
+        const result = response.queries?.cards || [];
+
+        if (result.length) {
+          socketClient.emit(KanbanEvent.AddCard, result[0].USR$MASTERKEY, {...result[0], DEAL: body.DEAL});
+        }
+
+        return result;
+      },
       invalidatesTags: (result, error) => {
         return result
           ? [...result.map(({ USR$MASTERKEY }) => ({ type: 'Column' as const, USR$MASTERKEY }))]
@@ -188,7 +379,15 @@ export const kanbanApi = createApi({
           body: body
         };
       },
-      transformResponse: (response: IKanbanRequestResult) => response.queries?.cards || [],
+      transformResponse: (response: IKanbanRequestResult, meta, body) => {
+        const result = response.queries?.cards || [];
+
+        if (result.length) {
+          socketClient.emit(KanbanEvent.UpdateCard, body.USR$MASTERKEY ?? -1, body);
+        }
+
+        return result;
+      },
       invalidatesTags: (result, error) => {
         return result
           ? [
@@ -210,6 +409,10 @@ export const kanbanApi = createApi({
       invalidatesTags: (result, error) => {
         const USR$MASTERKEY = result?.USR$MASTERKEY;
 
+        if (result?.ID) {
+          socketClient.emit(KanbanEvent.DeleteCard, result.USR$MASTERKEY, result?.ID);
+        }
+
         return result
           ? [
             { type: 'Column' as const, id: USR$MASTERKEY },
@@ -228,7 +431,14 @@ export const kanbanApi = createApi({
           body: body
         };
       },
-      transformResponse: (response: IKanbanRequestResult) => response.queries?.cards || [],
+      transformResponse: (response: IKanbanRequestResult) => {
+        const result = response.queries?.cards || [];
+
+        if (result.length) {
+          socketClient.emit(KanbanEvent.ReorderCards, result[0].USR$MASTERKEY, result);
+        }
+        return result;
+      },
       invalidatesTags: (result, error) => {
         return result
           ? [
@@ -295,7 +505,15 @@ export const kanbanApi = createApi({
         method: 'POST',
         body
       }),
-      transformResponse: (res: IKanbanRequestResult) => res.queries.tasks[0],
+      transformResponse: (res: IKanbanRequestResult, meta, body) => {
+        const result = res.queries.tasks[0];
+
+        if (result) {
+          socketClient.emit(KanbanEvent.AddTask, result.USR$CARDKEY, result);
+        }
+
+        return result;
+      },
       invalidatesTags: (result, error) => {
         return [{ type: 'Task', id: 'LIST' }];
       }
@@ -309,7 +527,15 @@ export const kanbanApi = createApi({
           body
         };
       },
-      transformResponse: (res: IKanbanRequestResult) => res.queries.tasks[0],
+      transformResponse: (res: IKanbanRequestResult, meta, body) => {
+        const result = res.queries.tasks[0];
+
+        if (result) {
+          socketClient.emit(KanbanEvent.UpdateTask, body.USR$CARDKEY ?? -1, body);
+        }
+
+        return result;
+        },
       invalidatesTags: (result, error) => {
         return result
           ? [
@@ -330,6 +556,10 @@ export const kanbanApi = createApi({
       },
       invalidatesTags: (result, error) => {
         const id = result?.ID;
+
+        if (id) {
+          socketClient.emit(KanbanEvent.DeleteTask, id);
+        }
 
         return result
           ? [

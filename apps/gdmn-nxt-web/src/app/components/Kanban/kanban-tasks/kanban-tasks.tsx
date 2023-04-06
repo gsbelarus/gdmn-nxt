@@ -16,6 +16,7 @@ import { UserState } from '../../../features/user/userSlice';
 import { RootState } from '../../../store';
 import StyledGrid from '../../Styled/styled-grid/styled-grid';
 import CustomLoadingOverlay from '../../Styled/styled-grid/DataGridProOverlay/CustomLoadingOverlay';
+import { FormikProps } from 'formik';
 
 const useStyles = makeStyles(() => ({
   dataGrid: {
@@ -60,16 +61,17 @@ const useStyles = makeStyles(() => ({
 
 export interface KanbanTasksProps {
   card?: IKanbanCard;
+  formik: FormikProps<IKanbanCard>;
 }
 
 export function KanbanTasks(props: KanbanTasksProps) {
-  const { card } = props;
+  const { card, formik } = props;
 
   const classes = useStyles();
 
   const [openEidtForm, setOpenEditForm] = useState(false);
 
-  const { data: tasks, refetch, isFetching } = useGetTasksQuery(card?.ID || -1);
+  const { data: tasks = [], refetch, isFetching } = useGetTasksQuery(card?.ID || -1);
   const [addTask, { isSuccess: addedTaskSuccess, data: addedTask }] = useAddTaskMutation();
   const [updateTask, { isSuccess: updatedTaskSuccess }] = useUpdateTaskMutation();
   const [deleteTask, { isSuccess: deletedTaskSuccess }] = useDeleteTaskMutation();
@@ -83,6 +85,15 @@ export function KanbanTasks(props: KanbanTasksProps) {
   const setTask = (task?: IKanbanTask) => {
     currentTask.current = task;
   };
+
+  useEffect(() => {
+    /** Надо сообщить формику, что мы изменили задачи */
+    if (isFetching) return;
+
+    if (updatedTaskSuccess || deletedTaskSuccess) {
+      formik.setFieldValue('TASKS', [...tasks]);
+    }
+  }, [isFetching, updatedTaskSuccess, deletedTaskSuccess]);
 
   useEffect(() => {
     if ((updatedTaskSuccess) && changes.current.length > 0) {

@@ -1,4 +1,4 @@
-import { IMessage, socketClient } from '@gdmn-nxt/socket';
+import { ClientToServerEvents, IMessage, ServerToClientEvents, getSocketClient, socketClient } from '@gdmn-nxt/socket';
 import { Autocomplete, Box, Stack, TextField } from '@mui/material';
 import CustomizedCard from '../../../components/Styled/customized-card/customized-card';
 import NotificationList from '../../../layouts/MainLayout/Header/NotificationSection/notification-list/notification-list';
@@ -9,6 +9,7 @@ import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { useGetUsersQuery } from '../../../features/systemUsers';
 import { IUser } from '@gsbelarus/util-api-types';
 import CustomNoData from '../../../components/Styled/Icons/CustomNoData';
+import { Socket } from 'socket.io-client';
 
 /* eslint-disable-next-line */
 export interface ViewUserNotificationsProps {}
@@ -17,9 +18,15 @@ export function ViewUserNotifications(props: ViewUserNotificationsProps) {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const { data: users = [], isFetching: usersIsFetching } = useGetUsersQuery();
+  const [socketClient, setsocketClient] = useState<Socket<ServerToClientEvents, ClientToServerEvents>>();
 
   const handleUserChange = useCallback((e: any, value: IUser | null) => {
     setSelectedUser(value);
+  }, []);
+
+  useEffect(() => {
+    const socket = getSocketClient('notifications');
+    setsocketClient(socket);
   }, []);
 
   useEffect(() => {
@@ -43,7 +50,7 @@ export function ViewUserNotifications(props: ViewUserNotificationsProps) {
     });
 
     return () => {
-      socketClient.removeListener('messagesByUser_response');
+      socketClient?.removeListener('messagesByUser_response');
     };
   }, [socketClient]);
 

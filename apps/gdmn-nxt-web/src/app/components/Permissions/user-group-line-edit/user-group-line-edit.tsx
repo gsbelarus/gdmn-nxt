@@ -1,5 +1,5 @@
 import { IUserGroupLine } from '@gsbelarus/util-api-types';
-import { Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Slide, Stack, TextField } from '@mui/material';
+import { Autocomplete, Box, Button, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle, Slide, Stack, TextField } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
 import { makeStyles } from '@mui/styles';
 import { Form, FormikProvider, useFormik } from 'formik';
@@ -8,7 +8,6 @@ import { useGetUsersQuery } from '../../../features/systemUsers';
 import * as yup from 'yup';
 import styles from './user-group-line-edit.module.less';
 import ConfirmDialog from '../../../confirm-dialog/confirm-dialog';
-import filterOptions from '../../helpers/filter-options';
 
 const useStyles = makeStyles(() => ({
   dialog: {
@@ -70,11 +69,7 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
       USER: yup.object().required('Не выбран пользователь'),
     }),
     onSubmit: (value) => {
-      if (!confirmOpen) {
-        setConfirmOpen(true);
-        return;
-      };
-      setConfirmOpen(false);
+      setConfirmOpen(true);
     }
   });
 
@@ -90,6 +85,11 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
   const handleConfirmCancelClick = useCallback(() => {
     setConfirmOpen(false);
   }, []);
+
+  const filterOptions = createFilterOptions({
+    matchFrom: 'any',
+    stringify: (option:any) => option.NAME + option.CONTACT.NAME
+  });
 
   return (
     <Dialog
@@ -108,7 +108,7 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
               <Autocomplete
                 options={users || []}
                 getOptionLabel={option => option.NAME}
-                filterOptions={filterOptions(30, 'NAME')}
+                filterOptions={filterOptions}
                 value={users?.find(el => el.ID === formik.values.USER?.ID) || null}
                 loading={usersIsFetching}
                 loadingText="Загрузка данных..."
@@ -153,18 +153,15 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
           variant="text"
           color="primary"
         >
-            Отменить
+          Отменить
         </Button>
         <Button
           className={classes.button}
-          type={!formik.isValid ? 'submit' : 'button'}
+          type={'submit'}
           form="mainForm"
-          onClick={() => {
-            setConfirmOpen(formik.isValid);
-          }}
           variant="contained"
         >
-            Сохранить
+          Сохранить
         </Button>
       </DialogActions>
       <ConfirmDialog

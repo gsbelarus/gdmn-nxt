@@ -129,6 +129,7 @@ export function KanbanEditTask(props: KanbanEditTaskProps) {
   const handleConfirmOkClick = useCallback(() => {
     setConfirmOpen(false);
     onSubmit(formik.values, deleting);
+    formik.resetForm();
   }, [formik.values, deleting]);
 
   const handleConfirmCancelClick = useCallback(() => {

@@ -1,7 +1,8 @@
 import { IResultError } from '@gsbelarus/util-api-types';
 
 const localizations = {
-  'violation of FOREIGN KEY': 'Запись нельзя удалить, так как она используется в другом документе'
+  'violation of FOREIGN KEY': 'Запись нельзя удалить, так как она используется в другом документе',
+  'lock conflict on no wait transaction': 'Документ уже изменяется другим пользователем'
 };
 
 export const resultError = (message: string):IResultError => {

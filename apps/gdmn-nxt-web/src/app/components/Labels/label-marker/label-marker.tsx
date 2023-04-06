@@ -10,13 +10,13 @@ function hexToRGB(h: any) {
   let r = 0, g = 0, b = 0;
 
   // 3 digits
-  if (h.length === 4) {
+  if (h?.length === 4) {
     r = h[1] + h[1];
     g = h[2] + h[2];
     b = h[3] + h[3];
 
   // 6 digits
-  } else if (h.length === 7) {
+  } else if (h?.length === 7) {
     r = parseInt(h[1] + h[2], 16);
     g = parseInt(h[3] + h[4], 16);
     b = parseInt(h[5] + h[6], 16);
@@ -66,6 +66,8 @@ export function LabelMarker(props: LabelMarkerProps) {
   const labelL = hsl.l;
   const backgroundAlpha = 0.2;
   const borderAlpha = 0.3;
+
+  if (!name) return <></>;
 
   return (
     <div

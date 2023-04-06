@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from './store';
 import { queryLogin, selectMode, signedInCustomer, signedInEmployee, signInCustomer, signInEmployee, createCustomerAccount, UserState } from './features/user/userSlice';
 import { useEffect, useMemo, useState } from 'react';
-import { baseUrl } from './const';
+import { baseUrlApi } from './const';
 import { Button, Divider, Typography, Stack, useTheme } from '@mui/material';
 import CreateCustomerAccount from './create-customer-account/create-customer-account';
 import { Navigate } from 'react-router-dom';
@@ -26,14 +26,14 @@ const query = async (config: AxiosRequestConfig<any>): Promise<IAuthResult> => {
     if (response) {
       return { result: 'ERROR', message: error.message };
     } else if (request) {
-      return { result: 'ERROR', message: `Can't reach server ${baseUrl}: ${message}` };
+      return { result: 'ERROR', message: `Can't reach server ${baseUrlApi}: ${message}` };
     } else {
       return { result: 'ERROR', message: error.message };
     }
   }
 };
 
-const post = (url: string, data: Object) => query({ method: 'post', url, baseURL: baseUrl, data, withCredentials: true });
+const post = (url: string, data: Object) => query({ method: 'post', url, baseURL: baseUrlApi, data, withCredentials: true });
 
 export interface AppProps {}
 
@@ -108,15 +108,15 @@ export default function App(props: AppProps) {
           break;
 
         case 'QUERY_LOGIN': {
-          const response = await fetch(`${baseUrl}user`, { method: 'GET', credentials: 'include' });
+          const response = await fetch(`${baseUrlApi}user`, { method: 'GET', credentials: 'include' });
           const data = await response.json();
 
-          if (!data.userName) {
+          if (!data.result) {
             dispatch(selectMode());
             return;
           }
 
-          setUser(data);
+          setUser(data.user);
 
           const colorMode = getCookie('color-mode');
           switch (colorMode) {
@@ -158,15 +158,15 @@ export default function App(props: AppProps) {
 
 
   const handleSignIn = async () => {
-    const response = await fetch(`${baseUrl}user`, { method: 'GET', credentials: 'include' });
+    const response = await fetch(`${baseUrlApi}user`, { method: 'GET', credentials: 'include' });
     const data = await response.json();
 
-    if (!data.userName) {
+    if (!data.result) {
       dispatch(selectMode());
       return;
     }
 
-    setUser(data);
+    setUser(data.user);
 
     const colorMode = getCookie('color-mode');
     switch (colorMode) {
@@ -206,14 +206,14 @@ export default function App(props: AppProps) {
       case 'SIGN_IN_EMPLOYEE':
         return (
           <SignInSignUp
-            checkCredentials={(userName, password) => post('user/signin', { userName, password, employeeMode: true })}
+            checkCredentials={(userName, password) => post(`user/signin`, { userName, password, employeeMode: true })}
             onSignIn={handleSignIn}
           />
         );
       case 'SIGN_IN_CUSTOMER':
         return (
           <SignInSignUp
-            checkCredentials={(userName, password) => post('user/signin', { userName, password })}
+            checkCredentials={(userName, password) => post(`user/signin`, { userName, password })}
             newPassword={(email) => post('user/forgot-password', { email })}
             onSignIn={handleSignIn}
             bottomDecorator={() =>

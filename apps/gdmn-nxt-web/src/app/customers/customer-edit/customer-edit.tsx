@@ -38,6 +38,7 @@ import 'react-perfect-scrollbar/dist/css/styles.css';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { useGetBusinessProcessesQuery } from '../../features/business-processes';
 import ContactPersonList from '../contact-person-list/contact-person-list';
+import CustomizedDialog from '../../components/Styled/customized-dialog/customized-dialog';
 
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -111,7 +112,6 @@ export function CustomerEdit(props: CustomerEditProps) {
     NAME: customer?.NAME || '',
     PHONE: customer?.PHONE || '',
     EMAIL: customer?.EMAIL || '',
-    PARENT: customer?.PARENT || undefined,
     LABELS: customer?.LABELS || [],
     ADDRESS: customer?.ADDRESS || '',
     TAXID: customer?.TAXID || ''
@@ -126,8 +126,7 @@ export function CustomerEdit(props: CustomerEditProps) {
     validationSchema: yup.object().shape({
       NAME: yup.string().required('')
         .max(80, 'Слишком длинное наименование'),
-      EMAIL: yup.string().matches(/@./),
-      PARENT: yup.string().required('')
+      EMAIL: yup.string().matches(/@./)
     }),
     onSubmit: (values) => {
       if (!confirmOpen) {
@@ -140,7 +139,10 @@ export function CustomerEdit(props: CustomerEditProps) {
   });
 
   useEffect(() => {
-    if (!open) formik.resetForm();
+    if (!open) {
+      formik.resetForm();
+      if (tabIndex !== '1') setTabIndex('1');
+    };
   }, [open]);
 
   const handleDeleteClick = () => {
@@ -167,6 +169,10 @@ export function CustomerEdit(props: CustomerEditProps) {
     setConfirmOpen(false);
   }, []);
 
+  const handleClose = useCallback((e: any, reason: string) => {
+    if (reason === 'backdropClick') handleCancelClick();
+  }, [handleCancelClick]);
+
   const memoContactlist = useMemo(() =>
     <ContactPersonList customerId={customer?.ID || -1} />,
   [customer?.ID]);
@@ -183,10 +189,10 @@ export function CustomerEdit(props: CustomerEditProps) {
   , [confirmOpen, deleting]);
 
   return (
-    <Dialog
+    <CustomizedDialog
       open={open}
-      classes={{ paper: classes.dialog }}
-      TransitionComponent={Transition}
+      onClose={handleClose}
+      width={'30vw'}
     >
       <DialogTitle>
         {customer ? `Редактирование: ${customer.NAME}` : 'Добавление'}
@@ -217,41 +223,6 @@ export function CustomerEdit(props: CustomerEditProps) {
                         onChange={formik.handleChange}
                         value={formik.values.NAME}
                         helperText={formik.errors.NAME}
-                      />
-                      <Autocomplete
-                        options={groups || []}
-                        loading={groupFetching}
-                        getOptionLabel={option => option.NAME}
-                        value={groups?.filter(el => el.ID === formik.values.PARENT)[0] || null}
-                        onChange={(e, value) => {
-                          formik.setFieldValue(
-                            'PARENT',
-                            value ? value.ID : initValue.PARENT
-                          );
-                        }}
-                        renderOption={(props, option) => {
-                          return (
-                            <li {...props} key={option.ID}>
-                              {option.NAME}
-                            </li>
-                          );
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            key={params.id}
-                            label="Папка"
-                            className={classes.helperText}
-                            type="text"
-                            required
-                            name="PARENT"
-                            onBlur={formik.handleBlur}
-                            onChange={formik.handleChange}
-                            value={formik.values.PARENT}
-                            helperText={formik.errors.PARENT}
-                            placeholder="Выберите папку"
-                          />
-                        )}
                       />
                       <TextField
                         label="УНП"
@@ -434,19 +405,15 @@ export function CustomerEdit(props: CustomerEditProps) {
         </Button>
         <Button
           className={classes.button}
-          type={!formik.isValid ? 'submit' : 'button'}
           form="customerEdit"
-          onClick={() => {
-            setDeleting(false);
-            setConfirmOpen(formik.isValid);
-          }}
+          type="submit"
           variant="contained"
         >
             Сохранить
         </Button>
       </DialogActions>
       {memoConfirmDialog}
-    </Dialog>
+    </CustomizedDialog>
   );
 }
 

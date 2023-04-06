@@ -54,7 +54,7 @@ export interface IBaseContact {
   FAX?: string;
 };
 
-export interface IContactWithID extends IBaseContact, IWithID, IWithParent {}
+export interface IContactWithID extends IBaseContact, IWithID {}
 
 export interface ICompany extends IBaseContact {
   FULLNAME: string;

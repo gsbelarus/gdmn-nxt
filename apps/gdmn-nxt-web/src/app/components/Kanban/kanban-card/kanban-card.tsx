@@ -149,7 +149,7 @@ export function KanbanCard(props: KanbanCardProps) {
   }, []);
 
   const doubleClick = useCallback(() => {
-    onEdit({ ...card, USR$ISREAD: true });
+    if (!card.USR$ISREAD) onEdit({ ...card, USR$ISREAD: true });
     setEditCard(true);
   }, [card]);
 

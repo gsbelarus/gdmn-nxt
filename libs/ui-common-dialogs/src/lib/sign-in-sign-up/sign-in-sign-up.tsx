@@ -120,6 +120,8 @@ export function SignInSignUp({ checkCredentials, createUser, newPassword, topDec
       if (r.result === 'SUCCESS') {
         onSignIn();
         // location.reload();
+      }else{
+        setLaunching(false);
       }
     });
   };

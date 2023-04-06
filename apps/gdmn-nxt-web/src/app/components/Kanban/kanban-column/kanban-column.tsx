@@ -198,7 +198,7 @@ export function KanbanColumn(props: KanbanColumnProps) {
               {isFetching ?
                 <Skeleton variant="circular" width={'33px'} height={'32px'}/>
                 :
-                <Chip className="quantity" label={item.CARDS.length} />
+                <Chip className="quantity" label={item.CARDS?.length} />
               }
             </Stack>
           }

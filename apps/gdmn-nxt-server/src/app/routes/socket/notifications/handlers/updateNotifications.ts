@@ -1,5 +1,5 @@
-import { resultError } from '../../../responseMessages';
-import { startTransaction } from '../../../utils/db-connection';
+import { resultError } from '../../../../responseMessages';
+import { startTransaction } from '../../../../utils/db-connection';
 
 export const updateNotifications = async (sessionId: string) => {
   const { releaseTransaction, fetchAsObject } = await startTransaction(sessionId);
