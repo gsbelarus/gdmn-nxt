@@ -69,6 +69,18 @@ export default function StyledGrid(props: IStyledGridProps) {
     '.MuiDataGrid-detailPanel': {
       backgroundColor: 'inherit',
       padding: '24px',
+    },
+    '& .MuiInputBase-root': {
+      margin: '0px 5px',
+      border: `1px solid ${theme.mainContent.borderColor}`,
+      borderRadius: '10px',
+      padding: '10px 0px'
+    },
+    '& .MuiInputBase-input:hover': {
+      opacity: '0.7 !important'
+    },
+    '& .MuiInputBase-input:focus': {
+      opacity: '1 !important'
     }
   });
   return (
