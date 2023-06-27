@@ -1,0 +1,35 @@
+services:
+  client:
+    image: client
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: client
+      args:
+        - NX_HOST_IP=${NX_HOST_IP}
+        - NX_SERVER_PORT=${NX_SERVER_PORT}
+        - NX_MUI_LICENSE=${NX_MUI_LICENSE}
+        - NX_SOCKET_NOTIFICATIONS_PORT=${NX_SOCKET_NOTIFICATIONS_PORT}
+        - NX_SOCKET_STREAMING_UPDATE_PORT=${NX_SOCKET_STREAMING_UPDATE_PORT}
+        - NX_BRANCH=dockering
+    ports:
+      - ${NX_APP_PORT}:80
+    env_file:
+      - ./.env
+  server:
+    image: server
+    hostname: gdmn.crm
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+      args:
+        - NX_BRANCH=dockering
+    container_name: server
+    ports:
+      - "${NX_SERVER_PORT}:${NX_SERVER_PORT}"
+      - "${NX_SOCKET_NOTIFICATIONS_PORT}:${NX_SOCKET_NOTIFICATIONS_PORT}"
+      - "${NX_SOCKET_STREAMING_UPDATE_PORT}:${NX_SOCKET_STREAMING_UPDATE_PORT}"
+    env_file:
+      - ./.env
+      - ./.env.prod
