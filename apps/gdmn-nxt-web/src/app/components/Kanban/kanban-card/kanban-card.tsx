@@ -1,16 +1,17 @@
 import './kanban-card.module.less';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import CustomizedCard from '../../Styled/customized-card/customized-card';
 import { Box, IconButton, Stack, Typography, useTheme, Theme } from '@mui/material';
 import KanbanEditCard from '../kanban-edit-card/kanban-edit-card';
 import { DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { ColorMode, IKanbanCard, IKanbanColumn, IKanbanTask, Permissions } from '@gsbelarus/util-api-types';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import PermissionsGate from '../../Permissions/permission-gate/permission-gate';
 import { useSetCardStatusMutation } from '../../../features/kanban/kanbanApi';
 import { TaskStatus } from './task-status';
+import { setCardIdForOpen } from '../../../store/kanbanSlice';
 
 export interface KanbanCardProps {
   snapshot: DraggableStateSnapshot;
@@ -37,8 +38,16 @@ export function KanbanCard(props: KanbanCardProps) {
   const colorModeIsLight = useMemo(() => colorMode === ColorMode.Light, [colorMode]);
   const [editCard, setEditCard] = useState(false);
   const [copyCard, setCopyCard] = useState(false);
-
+  const kanbanStorage = useSelector((state: RootState) => state.kanbanStorage);
   const [upsertCardStatus] = useSetCardStatusMutation();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (kanbanStorage.cardIdForOpen === -1) return;
+    if (kanbanStorage.cardIdForOpen !== card.ID) return;
+    setEditCard(true);
+    dispatch(setCardIdForOpen(-1));
+  }, [kanbanStorage]);
 
   const cardHandlers = {
     handleSubmit: (newCard: IKanbanCard, deleting: boolean) => {

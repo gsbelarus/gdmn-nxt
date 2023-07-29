@@ -34,11 +34,13 @@ import { profileSettingsApi } from '../features/profileSettings';
 import { kanbanCatalogsApi } from '../features/kanban/kanbanCatalogsApi';
 import { kanbanFiltersApi } from '../features/kanban/kanbanFiltersApi';
 import { updatesApi } from '../features/updates';
+import kanbanReducer from './kanbanSlice';
 
 const reducers = combineReducers({
   viewForms: viewFormsReducer,
   settings: settingsReducer,
   filtersStorage: filtersReducer,
+  kanbanStorage: kanbanReducer,
   error: errorReducer,
   user: userReducer,
   nlp: nlpReducer,

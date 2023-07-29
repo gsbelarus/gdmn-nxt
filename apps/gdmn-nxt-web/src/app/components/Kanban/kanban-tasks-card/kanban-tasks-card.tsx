@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './kanban-tasks-card.module.less';
 import { ColorMode, IKanbanCard, IKanbanTask } from '@gsbelarus/util-api-types';
 import CustomizedCard from '../../Styled/customized-card/customized-card';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
-import { Box, Icon, Stack, Typography } from '@mui/material';
+import { Box, Button, Icon, Stack, Typography } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import KanbanEditTask from '../kanban-edit-task/kanban-edit-task';
 import { useAddHistoryMutation, useAddTaskMutation, useDeleteTaskMutation, useSetCardStatusMutation, useUpdateTaskMutation } from '../../../features/kanban/kanbanApi';
@@ -14,6 +14,8 @@ import useTruncate from '../../helpers/hooks/useTruncate';
 import PermissionsGate from '../../Permissions/permission-gate/permission-gate';
 import usePermissions from '../../helpers/hooks/usePermissions';
 import ForwardIcon from '@mui/icons-material/Forward';
+import { setCardIdForOpen } from '../../../store/kanbanSlice';
+import { useNavigate } from 'react-router-dom';
 
 export interface KanbanTasksCardProps {
   card: IKanbanCard;
@@ -84,6 +86,16 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
       onCancelClick={handleTaskEditCancelClick}
     />,
   [openEditForm]);
+
+  const dispatch = useDispatch();
+
+  const navigate = useNavigate();
+
+  const openCard = () => {
+    if (!card.TASK?.USR$CARDKEY) return;
+    dispatch(setCardIdForOpen(card.TASK?.USR$CARDKEY));
+    navigate('/employee/managment/deals/list');
+  };
 
   return (
     <>
@@ -179,7 +191,9 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
               }
             </Typography>
           </Stack>}
-          <Typography variant="body1">{card.DEAL?.USR$NAME}</Typography>
+          <Button
+            onClick={openCard}
+          >{card.DEAL?.USR$NAME}</Button>
         </Stack>
       </CustomizedCard>
       <PermissionsGate actionAllowed={userPermissions?.tasks.PUT}>
