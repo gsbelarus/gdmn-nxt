@@ -105,7 +105,7 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
 
   const openCard = () => {
     if (!card.TASK?.USR$CARDKEY) return;
-    if (checkOpenCard()) return;
+    if (!checkOpenCard()) return;
     dispatch(setCardIdForOpen(card.TASK?.USR$CARDKEY));
     navigate('/employee/managment/deals/list');
   };
