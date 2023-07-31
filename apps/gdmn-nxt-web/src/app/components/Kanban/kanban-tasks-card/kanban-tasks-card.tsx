@@ -4,7 +4,7 @@ import { ColorMode, IKanbanCard, IKanbanTask } from '@gsbelarus/util-api-types';
 import CustomizedCard from '../../Styled/customized-card/customized-card';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
-import { Box, Button, Icon, Stack, Typography } from '@mui/material';
+import { Box, Button, Icon, Link, Stack, Typography } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import KanbanEditTask from '../kanban-edit-task/kanban-edit-task';
 import { useAddHistoryMutation, useAddTaskMutation, useDeleteTaskMutation, useSetCardStatusMutation, useUpdateTaskMutation } from '../../../features/kanban/kanbanApi';
@@ -91,8 +91,21 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
 
   const navigate = useNavigate();
 
+  const checkOpenCard = useCallback(() => {
+    const performers = card.DEAL?.PERFORMERS?.every(
+      performer => performer.ID !== card.TASK?.CREATOR.ID && performer.ID !== card.TASK?.PERFORMER?.ID
+    );
+    if (
+      card.TASK?.CREATOR.ID !== card.DEAL?.CREATOR?.ID
+      && card.TASK?.PERFORMER?.ID !== card.DEAL?.CREATOR?.ID
+      && performers
+    ) return false;
+    return true;
+  }, [card]);
+
   const openCard = () => {
     if (!card.TASK?.USR$CARDKEY) return;
+    if (checkOpenCard()) return;
     dispatch(setCardIdForOpen(card.TASK?.USR$CARDKEY));
     navigate('/employee/managment/deals/list');
   };
@@ -191,9 +204,13 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
               }
             </Typography>
           </Stack>}
-          <Button
-            onClick={openCard}
-          >{card.DEAL?.USR$NAME}</Button>
+          {checkOpenCard() ?
+            <Link
+              onClick={openCard}
+            >{card.DEAL?.USR$NAME}</Link>
+            : <Typography variant="body1">{card.DEAL?.USR$NAME}</Typography>
+          }
+
         </Stack>
       </CustomizedCard>
       <PermissionsGate actionAllowed={userPermissions?.tasks.PUT}>

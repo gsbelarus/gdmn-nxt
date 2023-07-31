@@ -611,6 +611,12 @@ const getTasks: RequestHandler = async (req, res) => {
             deal.USR$CONTACTKEY CONTACT_ID,
             deal.USR$NAME as DEAL_NAME,
             deal.USR$CONTACT_NAME REQUEST_CONTACT_NAME,
+            dealPerformer.ID AS DEAL_PERFORMER_ID,
+            dealPerformer.NAME AS DEAL_PERFORMER_NAME,
+            dealSecondPerformer.ID AS DEAL_SECOND_PERFORMER_ID,
+            dealSecondPerformer.NAME AS DEAL_SECOND_PERFORMER_NAME,
+            dealCreator.ID AS DEAL_CREATOR_ID,
+            dealCreator.NAME AS DEAL_CREATOR_NAME,
             task.USR$NUMBER,
             task.USR$DEADLINE,
             task.USR$DATECLOSE,
@@ -628,6 +634,9 @@ const getTasks: RequestHandler = async (req, res) => {
           JOIN USR$CRM_KANBAN_CARDS card ON card.ID = task.USR$CARDKEY
           JOIN USR$CRM_DEALS deal ON deal.ID = card.USR$DEALKEY
           JOIN GD_CONTACT con ON con.ID = deal.USR$CONTACTKEY
+          LEFT JOIN GD_CONTACT dealPerformer ON dealPerformer.ID = deal.USR$PERFORMER
+          LEFT JOIN GD_CONTACT dealSecondPerformer ON dealSecondPerformer.ID = deal.USR$SECOND_PERFORMER
+          LEFT JOIN GD_CONTACT dealCreator ON dealCreator.ID = deal.USR$CREATORKEY
           LEFT JOIN GD_CONTACT performer ON performer.ID = task.USR$PERFORMER
           LEFT JOIN GD_CONTACT creator ON creator.ID = task.USR$CREATORKEY
           LEFT JOIN USR$CRM_KANBAN_CARD_TASKS_TYPES tt ON tt.ID = task.USR$TASKTYPEKEY
@@ -736,7 +745,21 @@ const getTasks: RequestHandler = async (req, res) => {
             },
           }),
           CONTACT_NAME: el['REQUEST_CONTACT_NAME'],
-          USR$NAME: el['DEAL_NAME']
+          USR$NAME: el['DEAL_NAME'],
+          CREATOR: {
+            ID: el['DEAL_CREATOR_ID'],
+            NAME: el['DEAL_CREATOR_NAME'],
+          },
+          PERFORMERS: [
+            {
+              ID: el['DEAL_PERFORMER_ID'],
+              NAME: el['DEAL_PERFORMER_NAME'],
+            },
+            {
+              ID: el['DEAL_SECOND_PERFORMER_ID'],
+              NAME: el['DEAL_SECOND_PERFORMER_NAME'],
+            }
+          ]
         },
         STATUS: status[el['TASK_ID']]
       };
