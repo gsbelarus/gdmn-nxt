@@ -147,7 +147,7 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
             </Typography>
           </Stack>
 
-          <Box>
+          <Box style={{ margin: 0 }}>
             <Typography
               display={!card.DEAL?.CONTACT_NAME ? 'none' : 'inline'}
               variant="h2"
@@ -164,13 +164,23 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
               {truncate(card.DEAL?.CONTACT?.NAME || '', 50)}
             </Typography>
           </Box>
-          <Typography variant="caption" color={colorModeIsLight ? 'GrayText' : 'lightgray'}>
+          <Typography
+            variant="caption"
+            color={colorModeIsLight ? 'GrayText' : 'lightgray'}
+            style={card.TASK?.USR$DEADLINE && (new Date(card.TASK?.USR$DEADLINE) < new Date()
+              ? { color: 'red', margin: 0 }
+              : new Date(card.TASK?.USR$DEADLINE).getDay() === new Date().getDay()
+                ? { color: 'orange', margin: 0 }
+                : { margin: 0 })}
+          >
             {card.TASK?.USR$DEADLINE
               ? (new Date(card.TASK?.USR$DEADLINE)).toLocaleString('default',
                 {
                   day: '2-digit',
                   month: 'short',
-                  year: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
                   ...((new Date(card.TASK?.USR$DEADLINE).getHours() !== 0) && { hour: '2-digit', minute: '2-digit' }) })
               : '-/-'}
           </Typography>
@@ -181,6 +191,7 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
             alignItems="center"
             spacing={0.5}
             ml={-0.2}
+            style={{ marginTop: 4 }}
           >
             <AccountCircleIcon color="primary" fontSize="small" />
             <Typography variant="h2">
@@ -206,9 +217,10 @@ export function KanbanTasksCard(props: KanbanTasksCardProps) {
           </Stack>}
           {checkOpenCard() ?
             <Link
+              style={{ marginTop: 4, fontSize: '0.8rem' }}
               onClick={openCard}
             >{card.DEAL?.USR$NAME}</Link>
-            : <Typography variant="body1">{card.DEAL?.USR$NAME}</Typography>
+            : <Typography style={{ marginTop: 4 }} variant="h2">{card.DEAL?.USR$NAME}</Typography>
           }
 
         </Stack>
