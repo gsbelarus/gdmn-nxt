@@ -7,6 +7,7 @@
     "start:dev": "dotenv -c dev -- yarn nx run-many --parallel --target=serve --projects=gdmn-nxt-server,gdmn-nxt-web",
     "start:prod": "dotenv -c prod -- yarn nx run-many --parallel --target=serve --projects=gdmn-nxt-server,gdmn-nxt-web --prod",
     "build": "dotenv -c prod -- yarn nx run-many --target=build --all --parallel --prod",
+    "build:server": "dotenv -c prod -- yarn nx run-many --target=build --all --parallel --prod gdmn-nxt-server",
     "test": "yarn nx run-many --target=test --all --parallel",
     "pm2:start": "pm2 start pm2.config.js",
     "pm2:stop": "pm2 stop gdmn-crm",
