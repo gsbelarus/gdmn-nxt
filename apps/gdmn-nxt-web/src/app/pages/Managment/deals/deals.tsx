@@ -1,24 +1,20 @@
 import styles from './deals.module.less';
 import KanbanBoard from '../../../components/Kanban/kanban-board/kanban-board';
 import { useDispatch, useSelector } from 'react-redux';
-import React, { ChangeEvent, SyntheticEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { toggleMenu } from '../../../store/settingsSlice';
-import { useGetKanbanDealsQuery, useReorderCardsMutation, useReorderColumnsMutation, useUpdateCardMutation } from '../../../features/kanban/kanbanApi';
-import { CircularIndeterminate } from '../../../components/helpers/circular-indeterminate/circular-indeterminate';
+import { SyntheticEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useGetKanbanDealsQuery } from '../../../features/kanban/kanbanApi';
 import { RootState } from '../../../store';
-import { UserState } from '../../../features/user/userSlice';
 import CustomizedCard from '../../../components/Styled/customized-card/customized-card';
-import { Autocomplete, Badge, BottomNavigation, BottomNavigationAction, Button, CircularProgress, IconButton, Skeleton, Stack, TextField, Tooltip, Box, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { Autocomplete, Badge, CircularProgress, IconButton, Skeleton, Stack, TextField, Tooltip, Box, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 import ViewStreamIcon from '@mui/icons-material/ViewStream';
 import KanbanList from '../../../components/Kanban/kanban-list/kanban-list';
-import { IKanbanCard, IKanbanColumn, IKanbanFilterDeadline, IPermissionByUser } from '@gsbelarus/util-api-types';
+import { IKanbanColumn, IKanbanFilterDeadline } from '@gsbelarus/util-api-types';
 import DealsFilter, { IFilteringData } from '../../../components/Kanban/deals-filter/deals-filter';
 import { clearFilterData, saveFilterData } from '../../../store/filtersSlice';
 import { useGetFiltersDeadlineQuery, useGetLastUsedFilterDeadlineQuery, usePostLastUsedFilterDeadlineMutation } from '../../../features/kanban/kanbanFiltersApi';
-import { DropResult } from '@hello-pangea/dnd';
 
 export interface IChanges {
   id: number;
@@ -207,7 +203,7 @@ export function Deals(props: DealsProps) {
     columns={columnsCache || columns}
     isLoading={componentIsFetching}
     setColumnsCache={setColumnsCache}
-  />, [columns, componentIsFetching, columnsCache]);
+                                        />, [columns, componentIsFetching, columnsCache]);
 
   const KanbanListMemo = useMemo(() =>
     <Box className={styles.kanbanListContainer}>
