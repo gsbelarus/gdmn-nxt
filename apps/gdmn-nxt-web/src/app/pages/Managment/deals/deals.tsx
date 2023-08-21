@@ -3,7 +3,7 @@ import KanbanBoard from '../../../components/Kanban/kanban-board/kanban-board';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { ChangeEvent, SyntheticEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { toggleMenu } from '../../../store/settingsSlice';
-import { useGetKanbanDealsQuery } from '../../../features/kanban/kanbanApi';
+import { useGetKanbanDealsQuery, useReorderCardsMutation, useReorderColumnsMutation, useUpdateCardMutation } from '../../../features/kanban/kanbanApi';
 import { CircularIndeterminate } from '../../../components/helpers/circular-indeterminate/circular-indeterminate';
 import { RootState } from '../../../store';
 import { UserState } from '../../../features/user/userSlice';
@@ -18,6 +18,7 @@ import { IKanbanCard, IKanbanColumn, IKanbanFilterDeadline, IPermissionByUser } 
 import DealsFilter, { IFilteringData } from '../../../components/Kanban/deals-filter/deals-filter';
 import { clearFilterData, saveFilterData } from '../../../store/filtersSlice';
 import { useGetFiltersDeadlineQuery, useGetLastUsedFilterDeadlineQuery, usePostLastUsedFilterDeadlineMutation } from '../../../features/kanban/kanbanFiltersApi';
+import { DropResult } from '@hello-pangea/dnd';
 
 export interface IChanges {
   id: number;
@@ -69,6 +70,12 @@ export function Deals(props: DealsProps) {
   }, {
     skip: Object.keys(filtersStorage.filterData.deals || {}).length === 0
   });
+
+  useEffect(() => {
+    setColumnsCache(undefined);
+  }, [columns]);
+
+  const [columnsCache, setColumnsCache] = useState<IKanbanColumn[] | undefined>(undefined);
 
   const saveFilters = (filteringData: IFilteringData) => {
     dispatch(saveFilterData({ 'deals': filteringData }));
@@ -196,13 +203,17 @@ export function Deals(props: DealsProps) {
   }
   , [tabNo, filtersStorage.filterData.deals, columnsIsFetching]);
 
-  const KanbanBoardMemo = useMemo(() => <KanbanBoard columns={columns} isLoading={componentIsFetching} />, [columns, componentIsFetching]);
+  const KanbanBoardMemo = useMemo(() => <KanbanBoard
+    columns={columnsCache || columns}
+    isLoading={componentIsFetching}
+    setColumnsCache={setColumnsCache}
+  />, [columns, componentIsFetching, columnsCache]);
 
   const KanbanListMemo = useMemo(() =>
     <Box className={styles.kanbanListContainer}>
-      <KanbanList columns={columns} />
+      <KanbanList columns={columnsCache || columns} />
     </Box>
-  , [columns]);
+  , [columns, columnsCache]);
 
   return (
     <Stack

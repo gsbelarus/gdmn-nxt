@@ -32,10 +32,11 @@ import { useMemo } from 'react';
 export interface KanbanBoardProps {
   columns?: IKanbanColumn[];
   isLoading: boolean,
+  setColumnsCache: (arg: IKanbanColumn[] | undefined) => void
 };
 
 export function KanbanBoard(props: KanbanBoardProps) {
-  const { columns = [], isLoading } = props;
+  const { columns = [], isLoading, setColumnsCache } = props;
 
   const user = useSelector<RootState, UserState>(state => state.user);
   const [updateColumn] = useUpdateColumnMutation();
@@ -187,6 +188,7 @@ export function KanbanBoard(props: KanbanBoardProps) {
         return { ...el, USR$INDEX: index };
       });
 
+
       // setColumns(newColumns);
       reorderColumn(newColumns);
     };
@@ -240,6 +242,8 @@ export function KanbanBoard(props: KanbanBoardProps) {
           }
           return { ...column, CARDS: newCards };
         });
+
+        setColumnsCache(newColumns);
 
         updateCard(moveCard);
       }
