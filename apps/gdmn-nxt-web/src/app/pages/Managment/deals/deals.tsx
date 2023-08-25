@@ -68,8 +68,9 @@ export function Deals(props: DealsProps) {
   });
 
   useEffect(() => {
+    if (columnsIsFetching) return;
     setColumnsCache(undefined);
-  }, [columns]);
+  }, [columns, columnsIsFetching]);
 
   const [columnsCache, setColumnsCache] = useState<IKanbanColumn[] | undefined>(undefined);
 
