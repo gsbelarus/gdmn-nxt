@@ -38,6 +38,7 @@ import { nodeCache } from './app/utils/cache';
 import { authRouter } from './app/routes/authRouter';
 import path from 'path';
 import { sendEmail } from './app/utils/mail';
+import { bodySize } from './app/middlewares/bodySize';
 
 /** Расширенный интерфейс для сессии */
 declare module 'express-session' {
@@ -64,7 +65,6 @@ app.use(cors({
 if (config.serverStaticMode) {
   app.use(express.static(path.resolve(__dirname, '../gdmn-nxt-web')));
 }
-app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 const apiRoot = {
   v1: '/api/v1',
@@ -213,6 +213,7 @@ export const apiVersion = apiRoot.v1;
 router.use(authRouter);
 /** Подключаем мидлвар после роутов, на которые он не должен распространятсься */
 router.use(checkPermissions);
+// router.use(bodySize);
 
 app.use(middlewares);
 app.use(apiVersion, router);

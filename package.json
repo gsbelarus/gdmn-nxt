@@ -61,6 +61,7 @@
     "nodemailer": "^6.7.2",
     "notistack": "^2.0.8",
     "number-to-words-ru": "^2.3.2",
+    "object-sizeof": "^2.6.3",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
     "react": "18.2.0",
