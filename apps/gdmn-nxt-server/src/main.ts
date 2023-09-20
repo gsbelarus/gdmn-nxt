@@ -37,6 +37,7 @@ import { checkPermissions, setPermissonsCache } from './app/middlewares/permissi
 import { nodeCache } from './app/utils/cache';
 import { authRouter } from './app/routes/authRouter';
 import path from 'path';
+import bodyParser from 'body-parser';
 import { sendEmail } from './app/utils/mail';
 import { bodySize } from './app/middlewares/bodySize';
 
@@ -70,6 +71,8 @@ const apiRoot = {
   v1: '/api/v1',
   v2: '/api/v2'
 };
+
+app.use(bodyParser.json());
 
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000,
