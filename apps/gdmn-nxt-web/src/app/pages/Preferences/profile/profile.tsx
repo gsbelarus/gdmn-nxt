@@ -21,11 +21,11 @@ export interface ProfileProps {}
 export function Profile(props: ProfileProps) {
   const { userProfile } = useSelector<RootState, UserState>(state => state.user);
   const { data: settings, isLoading } = useGetProfileSettingsQuery(userProfile?.id || -1);
-  const [setSettings, { isLoading: updateIsLoading }] = useSetProfileSettingsMutation();
+  const [setSettings, { isLoading: updateIsLoading, error }] = useSetProfileSettingsMutation();
 
   const [image, setImage] = useState<string>(NoPhoto);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const handleUploadClick = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0] || undefined;
@@ -73,7 +73,7 @@ export function Profile(props: ProfileProps) {
 
   useEffect(() => {
     settings?.AVATAR && setImage(settings?.AVATAR);
-  }, [settings?.AVATAR]);
+  }, [settings?.AVATAR, error]);
 
   const initValue: Partial<IProfileSettings> = {
     SEND_EMAIL_NOTIFICATIONS: settings?.SEND_EMAIL_NOTIFICATIONS ?? false,

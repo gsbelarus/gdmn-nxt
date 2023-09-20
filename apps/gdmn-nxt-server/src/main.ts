@@ -37,9 +37,10 @@ import { checkPermissions, setPermissonsCache } from './app/middlewares/permissi
 import { nodeCache } from './app/utils/cache';
 import { authRouter } from './app/routes/authRouter';
 import path from 'path';
-import bodyParser from 'body-parser';
+import bodyParser from 'body-parser'; 
 import { sendEmail } from './app/utils/mail';
-import { bodySize } from './app/middlewares/bodySize';
+import expressBodyParserErrorHandler from 'express-body-parser-error-handler';
+import { resultError } from './app/responseMessages';
 
 /** Расширенный интерфейс для сессии */
 declare module 'express-session' {
@@ -66,13 +67,26 @@ app.use(cors({
 if (config.serverStaticMode) {
   app.use(express.static(path.resolve(__dirname, '../gdmn-nxt-web')));
 }
+
+app.use(bodyParser.json({ type: (error) => {
+  try {
+  return 'application/json';
+  } catch (err) {
+    console.log(err);
+  }
+}, limit: '1mb' }));
+
+app.use(expressBodyParserErrorHandler({
+  onError: (err, req, res) => {
+    if (err.message === 'request entity too large') return res.status(413).send(resultError('Слишком большой файл'));
+  }
+}));
+
 app.use(express.urlencoded({ extended: true }));
 const apiRoot = {
   v1: '/api/v1',
   v2: '/api/v2'
 };
-
-app.use(bodyParser.json());
 
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000,
@@ -216,7 +230,6 @@ export const apiVersion = apiRoot.v1;
 router.use(authRouter);
 /** Подключаем мидлвар после роутов, на которые он не должен распространятсься */
 router.use(checkPermissions);
-// router.use(bodySize);
 
 app.use(middlewares);
 app.use(apiVersion, router);
