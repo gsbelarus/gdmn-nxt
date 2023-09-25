@@ -2,16 +2,21 @@ import { ThemeOptions } from '@mui/material';
 import { Typography } from '@mui/material/styles/createTypography';
 import { CSSProperties } from '@mui/styles';
 
+declare module '@mui/material/styles' {
+  interface TypographyVariants {
+    pageHeader: React.CSSProperties;
+  }
+  interface TypographyVariantsOptions {
+    pageHeader?: React.CSSProperties;
+  }
+}
 declare module '@mui/material/Typography' {
   interface TypographyPropsVariantOverrides {
     pageHeader: true;
   }
 }
-interface CustomTypography extends Typography {
-  pageHeader?: CSSProperties;
-}
 
-export default function typography(theme: ThemeOptions): Partial<CustomTypography> {
+export default function typography(theme: ThemeOptions): Partial<Typography> {
   return {
     fontFamily: theme.fontFamily,
     fontWeightMedium: 600,
@@ -34,6 +39,6 @@ export default function typography(theme: ThemeOptions): Partial<CustomTypograph
     pageHeader: {
       fontSize: '1.5rem',
       fontWeight: 600,
-    }
+    },
   };
 };

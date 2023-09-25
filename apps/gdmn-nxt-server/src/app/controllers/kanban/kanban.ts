@@ -2,7 +2,7 @@ import { IDataSchema, IEntities, IKanbanCard, IKanbanColumn, IRequestResult } fr
 import { RequestHandler } from 'express';
 import { ResultSet } from 'node-firebird-driver-native';
 import { resultError } from '../../responseMessages';
-import { acquireReadTransaction, commitTransaction, releaseTransaction, startTransaction } from '../../utils/db-connection';
+import { acquireReadTransaction, commitTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { getDayDiff } from '@gsbelarus/util-helpers';
 
 interface IMapOfArrays {

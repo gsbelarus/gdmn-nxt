@@ -3,7 +3,7 @@ import { RequestHandler } from 'express';
 import { Blob } from 'node-firebird-driver-native';
 import { TextDecoder } from 'util';
 import { resultError } from '../responseMessages';
-import { acquireReadTransaction, getReadTransaction, releaseReadTransaction as releaseRT } from '../utils/db-connection';
+import { acquireReadTransaction, getReadTransaction, releaseReadTransaction as releaseRT } from '@gdmn-nxt/db-connection';
 
 const getHistory: RequestHandler = async(req, res) => {
   const { attachment, transaction } = await getReadTransaction(req.sessionID);
@@ -67,7 +67,7 @@ const getHistory: RequestHandler = async(req, res) => {
 const executeScript: RequestHandler = async(req, res) => {
   const { script, params } = req.body;
 
-  //console.log('body', req.body);
+  // console.log('body', req.body);
 
   if (!script) {
     return res.status(422).send(resultError('Отсутсвтует код для выполнения'));

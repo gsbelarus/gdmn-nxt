@@ -2,7 +2,7 @@ import { IDataSchema, IKanbanHistory, IKanbanTask, IRequestResult } from '@gsbel
 import { RequestHandler } from 'express';
 import { ResultSet } from 'node-firebird-driver-native';
 import { resultError } from '../../responseMessages';
-import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { genId } from '../../utils/genId';
 import { addHistory } from './history';
 

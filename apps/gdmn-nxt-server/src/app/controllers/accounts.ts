@@ -1,15 +1,15 @@
-import { IAccount, IAccountWithID, IDataSchema, IRequestResult, IWithID } from "@gsbelarus/util-api-types";
-import { genPassword } from "@gsbelarus/util-helpers";
-import { genRandomPassword } from "@gsbelarus/util-useful";
-import { RequestHandler } from "express";
-import { acquireReadTransaction, releaseTransaction, startTransaction } from "../utils/db-connection";
-import { sendEmail } from "../utils/mail";
+import { IAccount, IAccountWithID, IDataSchema, IRequestResult, IWithID } from '@gsbelarus/util-api-types';
+import { genPassword } from '@gsbelarus/util-helpers';
+import { genRandomPassword } from '@gsbelarus/util-useful';
+import { RequestHandler } from 'express';
+import { acquireReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
+import { sendEmail } from '../utils/mail';
 
 export const upsertAccount: RequestHandler = async (req, res) => {
-  const { attachment, transaction} = await startTransaction(req.sessionID);
+  const { attachment, transaction } = await startTransaction(req.sessionID);
   try {
     let ID: number;
-    let insert: boolean;  // we know that this is an insert of a new account by the absence of the ID field
+    let insert: boolean; // we know that this is an insert of a new account by the absence of the ID field
 
     if (parseInt(req.params['ID']) > 0) {
       ID = parseInt(req.params['ID']);
@@ -25,7 +25,7 @@ export const upsertAccount: RequestHandler = async (req, res) => {
     }
 
     let newCredentials;
-    let approvalSet = Boolean(req.body['USR$APPROVED']);
+    const approvalSet = Boolean(req.body['USR$APPROVED']);
 
     if (insert) {
       newCredentials = approvalSet;
@@ -45,7 +45,7 @@ export const upsertAccount: RequestHandler = async (req, res) => {
 
     const allFields = ['ID', 'USR$FIRSTNAME', 'USR$LASTNAME', 'USR$POSITION', 'USR$PHONE', 'USR$EMAIL', 'USR$COMPANYKEY', 'USR$APPROVED', 'USR$EXPIREON', 'USR$SALT', 'USR$HASH'];
     const allFieldsNames = allFields.join(',');
-    const actualFields = allFields.filter( f => typeof req.body[f] !== 'undefined' );
+    const actualFields = allFields.filter(f => typeof req.body[f] !== 'undefined');
 
     if (!actualFields.includes('ID')) {
       actualFields.push('ID');
@@ -62,9 +62,9 @@ export const upsertAccount: RequestHandler = async (req, res) => {
     }
 
     const actualFieldsNames = actualFields.join(',');
-    const paramsString = actualFields.map( _ => '?' ).join(',');
-    const params = actualFields.map( f => {
-      switch (f){
+    const paramsString = actualFields.map(_ => '?').join(',');
+    const params = actualFields.map(f => {
+      switch (f) {
         case 'ID':
           return ID;
 
@@ -99,7 +99,7 @@ export const upsertAccount: RequestHandler = async (req, res) => {
 
     const result: IRequestResult<{ accounts: IAccountWithID[] }> = {
       queries: {
-        accounts: [Object.fromEntries( allFields.map( (f, idx) => ([f, row[idx]]) ) ) as IAccountWithID]
+        accounts: [Object.fromEntries(allFields.map((f, idx) => ([f, row[idx]]))) as IAccountWithID]
       },
       _schema: undefined
     };
@@ -137,12 +137,10 @@ export const upsertAccount: RequestHandler = async (req, res) => {
         console.error(err);
       }
     }
-  }
-  catch (err) {
+  } catch (err) {
     // console.error(err);
     res.sendStatus(500);
-  }
-  finally {
+  } finally {
     await releaseTransaction(req.sessionID, transaction);
   }
 };
@@ -218,7 +216,7 @@ export const getAccounts: RequestHandler = async (req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        ...Object.fromEntries(await Promise.all(queries.map( q => execQuery(q) )))
+        ...Object.fromEntries(await Promise.all(queries.map(q => execQuery(q))))
       },
       _params: req.params.email ? [{ email: req.params.email }] : undefined,
       _schema

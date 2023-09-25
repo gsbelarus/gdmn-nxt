@@ -3,7 +3,7 @@ import { RequestHandler } from 'express';
 import { ResultSet } from 'node-firebird-driver-native';
 import { importedModels } from '../utils/models';
 import { resultError } from '../responseMessages';
-import { acquireReadTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, rollbackTransaction, startTransaction } from '../utils/db-connection';
+import { acquireReadTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, rollbackTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { genId } from '../utils/genId';
 
 const eintityName = 'TgdcAttrUserDefinedUSR_CRM_UPDATES';
@@ -97,7 +97,7 @@ const upsert: RequestHandler = async (req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        update: [... await fetchAsObject(sql, { ID, VERSION, CHANGES, ONDATE: new Date(ONDATE) })]
+        update: [...await fetchAsObject(sql, { ID, VERSION, CHANGES, ONDATE: new Date(ONDATE) })]
       },
       _params: id ? [{ id: id }] : undefined,
       _schema

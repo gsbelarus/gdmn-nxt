@@ -1,6 +1,6 @@
 import { IDataSchema, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
-import { getReadTransaction, releaseReadTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
 import { resultError } from '../responseMessages';
 
 export const get: RequestHandler = async(req, res) => {

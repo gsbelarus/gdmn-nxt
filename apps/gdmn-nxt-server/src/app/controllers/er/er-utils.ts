@@ -1,13 +1,13 @@
-import { Expression, Entity, IEntities, IERModel, Operand, IDomains, Domain, IDomainBase, Attr, IAttrBase, IEntitySetAttr, IEntityAttr, ICrossAttrAdapter, isSeqAttr } from "@gsbelarus/util-api-types";
-import { writeFile } from "fs/promises";
-import { getReadTransaction, releaseReadTransaction } from "../../utils/db-connection";
-import { IAtRelation, IGedeminDocType } from "./at-types";
-import { loadAtFields, loadAtRelationFields, loadAtRelations, loadGdDocumentType, adjustRelationName } from "./at-utils";
-//import gdbaseRaw from "./gdbase.json";
-import entitiesRaw from "./entities.json";
-import { loadRDBFields } from "./rdb-utils";
-import { tmpdir } from "os";
-import { join } from "path";
+import { Expression, Entity, IEntities, IERModel, Operand, IDomains, Domain, IDomainBase, Attr, IAttrBase, IEntitySetAttr, IEntityAttr, ICrossAttrAdapter, isSeqAttr } from '@gsbelarus/util-api-types';
+import { writeFile } from 'fs/promises';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
+import { IAtRelation, IGedeminDocType } from './at-types';
+import { loadAtFields, loadAtRelationFields, loadAtRelations, loadGdDocumentType, adjustRelationName } from './at-utils';
+// import gdbaseRaw from "./gdbase.json";
+import entitiesRaw from './entities.json';
+import { loadRDBFields } from './rdb-utils';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 /*
 We import er model of the existing Gedemin database in following order:
@@ -31,10 +31,9 @@ const adjustValidation = (s: string | null) => {
 };
 
 const str2cond = (s: string): (Expression | undefined) => {
-
   const extractOperand = (s: string): (Operand | Expression) => {
     const expPlus = /(\w+)\s*\+\s*((-{0,1}\d+)|('(.*)'))/ig;
-    let res = expPlus.exec(s);
+    const res = expPlus.exec(s);
 
     if (res) {
       return {
@@ -48,7 +47,7 @@ const str2cond = (s: string): (Expression | undefined) => {
           type: 'VALUE',
           value: res[3] ? Number(res[3]) : res[5]
         }
-      }
+      };
     } else {
       return {
         type: 'FIELD',
@@ -122,13 +121,13 @@ const str2cond = (s: string): (Expression | undefined) => {
         }
       };
     } else {
-      const arr = res[3].split(',').map( i => i.trim() );
+      const arr = res[3].split(',').map(i => i.trim());
       let values;
 
-      if (arr[0].charAt(0) === "'") {
-        values = arr.map( i => i.slice(1, i.length - 1) );
+      if (arr[0].charAt(0) === '\'') {
+        values = arr.map(i => i.slice(1, i.length - 1));
       } else {
-        values = arr.map( i => Number(i) );
+        values = arr.map(i => Number(i));
       };
 
       return {
@@ -227,7 +226,7 @@ interface IgdbaseImport {
  * @returns
  */
 const getEntityScore = (e: Entity, refTable: string) => {
-  const joinScore = e.adapter?.join?.reverse().findIndex( j => j.name === refTable );
+  const joinScore = e.adapter?.join?.reverse().findIndex(j => j.name === refTable);
 
   if (joinScore >= 0) {
     return 1000 - joinScore;
@@ -348,7 +347,7 @@ export const importModels = async () => {
     writeFileSync('c:/temp/entities.json', JSON.stringify(entities, undefined, 2));
     */
 
-    const usrRelations = Object.values(atRelations).filter( r => r.RELATIONNAME.startsWith('USR$') );
+    const usrRelations = Object.values(atRelations).filter(r => r.RELATIONNAME.startsWith('USR$'));
 
     for (const usrRelation of usrRelations) {
       const arf = atRelationFields[usrRelation.RELATIONNAME];
@@ -358,13 +357,13 @@ export const importModels = async () => {
         continue;
       }
 
-      if (arf.find( f => f.FIELDNAME === 'ID')) {
-        const parent = arf.find( f => f.FIELDNAME === 'LB') ?
+      if (arf.find(f => f.FIELDNAME === 'ID')) {
+        const parent = arf.find(f => f.FIELDNAME === 'LB') ?
           entities['TgdcAttrUserDefinedLBRBTree']
-          : arf.find( f => f.FIELDNAME === 'PARENT') ?
-          entities['TgdcAttrUserDefinedTree']
-          :
-          entities['TgdcAttrUserDefined'];
+          : arf.find(f => f.FIELDNAME === 'PARENT') ?
+            entities['TgdcAttrUserDefinedTree']
+            :
+            entities['TgdcAttrUserDefined'];
 
         if (parent) {
           // make name looks the same way as in the Gedemin
@@ -436,7 +435,6 @@ export const importModels = async () => {
     };
 
 
-
     for (const documentType of gdDocumentType) {
       if (documentType.DOCUMENTTYPE === 'D' && documentType.HEADERRELNAME) {
         createDocEntity(dtMap[documentType.CLASSNAME || 'TgdcDocumentType'], documentType);
@@ -474,30 +472,29 @@ export const importModels = async () => {
         }
 
         if (!entityName) {
-          const found = Object.values(entities).filter( e =>
+          const found = Object.values(entities).filter(e =>
             // can't restrict on INNER joins only because of presence
             // of references to GD_COMPANYCODE relation
             // which is weak relation for TgdcCompany class
-            e.adapter?.join?.find( j => j.name === relation )
+            e.adapter?.join?.find(j => j.name === relation)
             ||
             e.adapter?.name === relation
           );
 
           if (found.length === 1) {
             entityName = found[0].name;
-          }
-          else if (found.length) {
+          } else if (found.length) {
             const sorted = found
-              .map( e => ({ e, score: getEntityScore(e, relation) }) )
-              .sort( (a, b) => b.score - a.score );
+              .map(e => ({ e, score: getEntityScore(e, relation) }))
+              .sort((a, b) => b.score - a.score);
 
             if (sorted[0].score > sorted[1].score) {
               entityName = sorted[0].e.name;
             } else {
               const getEntityDepth = (e: Entity) => e.parent ? (getEntityDepth(entities[e.parent]) + 1) : 0;
               const top = sorted
-                .filter( t => t.score === sorted[0].score )
-                .sort( (a, b) => getEntityDepth(b.e) - getEntityDepth(a.e) );
+                .filter(t => t.score === sorted[0].score)
+                .sort((a, b) => getEntityDepth(b.e) - getEntityDepth(a.e));
               entityName = top[0].e.name;
             }
           }
@@ -634,7 +631,7 @@ export const importModels = async () => {
                 domain = {
                   ...domainBase,
                   type: 'BIGINT',
-                  max: Number.MAX_SAFE_INTEGER, //TODO: need changing to BigInt class
+                  max: Number.MAX_SAFE_INTEGER, // TODO: need changing to BigInt class
                   min: Number.MIN_SAFE_INTEGER,
                   default: extractNumDef(rdbField.RDB$DEFAULT_SOURCE)
                 };
@@ -666,7 +663,7 @@ export const importModels = async () => {
                 };
                 break;
 
-              //TODO: treat text BLOBs as strings?
+              // TODO: treat text BLOBs as strings?
               case 261:
                 domain = {
                   ...domainBase,
@@ -698,16 +695,16 @@ export const importModels = async () => {
       }
 
       const candidates = entitiesArr
-        .map<[number, string] | undefined>( ({ name, adapter }) => {
+        .map<[number, string] | undefined>(({ name, adapter }) => {
           if (!adapter) {
             return undefined;
           }
 
           if (adapter.name === r) {
-            return [0, name]
+            return [0, name];
           }
 
-          const idx = adapter.join?.reverse().findIndex( j => j.name === r );
+          const idx = adapter.join?.reverse().findIndex(j => j.name === r);
 
           if (idx >= 0) {
             return [1000 - idx, name];
@@ -716,10 +713,10 @@ export const importModels = async () => {
           return undefined;
         })
         .filter(Boolean)
-        .sort( (a, b) => b[0] - a[0] );
+        .sort((a, b) => b[0] - a[0]);
 
       if (candidates.length) {
-        //console.log(`${r} ----> ${JSON.stringify(candidates)}`)
+        // console.log(`${r} ----> ${JSON.stringify(candidates)}`)
         return relation2entityNameCache[r] = candidates[0][1];
       }
 
@@ -727,7 +724,7 @@ export const importModels = async () => {
     };
 
     // don't want see the same warning multiple times
-    let prevWarning = '';
+    const prevWarning = '';
 
     for (const entity of entitiesArr) {
       if (entity.abstract) {
@@ -790,8 +787,8 @@ export const importModels = async () => {
             const refEntityName = fld.GDCLASSNAME
               ? (fld.GDCLASSNAME + adjustRelationName(fld.GDSUBTYPE))
               : domain.type === 'ENTITY' || domain.type === 'ENTITY[]'
-              ? domain.entityName
-              : relation2entityName(fld.REF);
+                ? domain.entityName
+                : relation2entityName(fld.REF);
             const refEntity = refEntityName && entities[refEntityName];
 
             if (!refEntity) {
@@ -860,16 +857,16 @@ export const importModels = async () => {
         Object.entries(erModel.entities).map(
           ([name, { adapter, attributes, ...rest }]) => ([name, {
             ...rest,
-            attributes: attributes.map( stripAdapter ),
+            attributes: attributes.map(stripAdapter),
           }])
         )
       ),
     };
 
-    const dumpFileName = join(tmpdir(),'erModel.json');
+    const dumpFileName = join(tmpdir(), 'erModel.json');
     writeFile(dumpFileName, dumpErModel, { encoding: 'utf8' })
-      .then( () => console.log(`ERModel dumped to ${dumpFileName}...`) )
-      .catch( e => console.error(e) );
+      .then(() => console.log(`ERModel dumped to ${dumpFileName}...`))
+      .catch(e => console.error(e));
 
     return {
       rdbModel: {

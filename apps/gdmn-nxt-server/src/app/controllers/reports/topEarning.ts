@@ -2,7 +2,7 @@ import { IQuery, IDataRecord, IRequestResult } from '@gsbelarus/util-api-types';
 import { parseParams } from '@gsbelarus/util-helpers';
 import { parseIntDef } from '@gsbelarus/util-useful';
 import { RequestHandler } from 'express';import { resultError } from '../../responseMessages';
-import { getReadTransaction, releaseReadTransaction } from '../../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
 ;
 
 export const getTopEarning: RequestHandler = async (req, res) => {
@@ -23,10 +23,10 @@ export const getTopEarning: RequestHandler = async (req, res) => {
 
     const { dates = [], depId, jobId, jobWorkId, customerCount = 10 } = req.body;
 
-    if (dates.length === 0 || dates.length > 2) return res.status(422).send(resultError('Не указан период'))
+    if (dates.length === 0 || dates.length > 2) return res.status(422).send(resultError('Не указан период'));
 
-    if (!(new Date(dates[0]) instanceof Date)) return res.status(422).send(resultError(`'Начало периода' неверного формата`))
-    if (!(new Date(dates[1]) instanceof Date)) return res.status(422).send(resultError(`'Конец периода' неверного формата`))
+    if (!(new Date(dates[0]) instanceof Date)) return res.status(422).send(resultError('\'Начало периода\' неверного формата'));
+    if (!(new Date(dates[1]) instanceof Date)) return res.status(422).send(resultError('\'Конец периода\' неверного формата'));
 
     const query: IQuery =
       {
@@ -56,14 +56,14 @@ export const getTopEarning: RequestHandler = async (req, res) => {
       queries: {
         ...Object.fromEntries([await Promise.resolve(execQuery(query))])
       },
-     _params: [{
-       dateBegin: dates[0],
-       dateEnd: dates[1],
-       ...(depId && { depId }),
-       ...(jobId && { jobId }),
-       ...(jobWorkId && { jobWorkId }),
-       customerCount
-    }],
+      _params: [{
+        dateBegin: dates[0],
+        dateEnd: dates[1],
+        ...(depId && { depId }),
+        ...(jobId && { jobId }),
+        ...(jobWorkId && { jobWorkId }),
+        customerCount
+      }],
       _schema
     };
 

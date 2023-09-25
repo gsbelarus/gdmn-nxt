@@ -1,5 +1,5 @@
 import { ColorMode, GedeminUser, IAccount, IAuthResult, IWithID } from '@gsbelarus/util-api-types';
-import { getReadTransaction, releaseReadTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
 
 export const checkGedeminUser = async (userName: string, password: string): Promise<IAuthResult> => {
   const query = `

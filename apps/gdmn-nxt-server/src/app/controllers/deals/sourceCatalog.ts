@@ -1,7 +1,7 @@
 import { IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { resultError } from '../../responseMessages';
-import { acquireReadTransaction, startTransaction } from '../../utils/db-connection';
+import { acquireReadTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { genId } from '../../utils/genId';
 
 const get: RequestHandler = async (req, res) => {
@@ -21,7 +21,7 @@ const get: RequestHandler = async (req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        dealSources: [... await fetchAsObject(query.query)]
+        dealSources: [...await fetchAsObject(query.query)]
       },
       _schema
     };
@@ -64,7 +64,7 @@ const upsert: RequestHandler = async(req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        dealSources: [... await fetchAsObject(sql, { ID, NAME })]
+        dealSources: [...await fetchAsObject(sql, { ID, NAME })]
       },
       _schema
     };

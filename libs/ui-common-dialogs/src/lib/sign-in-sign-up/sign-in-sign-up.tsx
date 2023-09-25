@@ -13,6 +13,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import VisibilityOnIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import SystemSecurityUpdateGoodIcon from '@mui/icons-material/SystemSecurityUpdateGood';
 import { BelgissLogo } from '@gdmn-nxt/ui-assets';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -30,7 +31,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 type Stage = 'SIGNIN' | 'SIGNUP' | 'FORGOT_PASSWORD';
 
 export interface SignInSignUpProps {
-  checkCredentials: (userName: string, password: string) => Promise<IAuthResult>;
+  onSignIn: (userName: string, password: string) => Promise<IAuthResult>;
   /**
    * Если call-back для создания пользователя не задан, то в окне будет отключен
    * функционал создания новой учетной записи.
@@ -39,7 +40,7 @@ export interface SignInSignUpProps {
   newPassword?: (email: string) => Promise<IAuthResult>;
   topDecorator?: (stage?: Stage) => JSX.Element;
   bottomDecorator?: (stage?: Stage) => JSX.Element;
-  onSignIn: () => void;
+  checkCredentials?: () => void;
 };
 
 type State = {
@@ -113,22 +114,28 @@ export function SignInSignUp({ checkCredentials, createUser, newPassword, topDec
     fn().then(r => dispatch({ type: 'SET_AUTHRESULT', authResult: r }));
   };
 
-  const doSignIn = () => {
+  const doSignIn = async () => {
     setLaunching(true);
-    checkCredentials(userName, password).then(r => {
-      dispatch({ type: 'SET_AUTHRESULT', authResult: r });
-      if (r.result === 'SUCCESS') {
-        onSignIn();
-        // location.reload();
-      }else{
-        setLaunching(false);
-      }
-    });
+    // checkCredentials(userName, password).then(r => {
+    //   dispatch({ type: 'SET_AUTHRESULT', authResult: r });
+    //   if (r.result === 'SUCCESS') {
+    //     onSignIn();
+    //   } else {
+    //     setLaunching(false);
+    //   }
+    // });
+    const res = await onSignIn(userName, password);
+    dispatch({ type: 'SET_AUTHRESULT', authResult: res });
+    if (res) {
+      // onSignIn();
+      // return;
+    }
+    setLaunching(false);
   };
 
-  const keyPress = (e: any) => {
+  const keyPress = async (e: any) => {
     if (e.keyCode === 13) {
-      doSignIn();
+      await doSignIn();
     }
   };
 
@@ -224,7 +231,7 @@ export function SignInSignUp({ checkCredentials, createUser, newPassword, topDec
             <BelgissLogo color="#64b5f6" scale={1.5}/>
           </Box>
           <Box textAlign={'center'}>
-            <Typography variant="h6" fontSize={'2rem'}>
+            <Typography variant="h4">
               Вход в систему
             </Typography>
           </Box>
@@ -308,17 +315,17 @@ export function SignInSignUp({ checkCredentials, createUser, newPassword, topDec
   return (
     <>
       {result}
-      <Dialog onClose={() => dispatch({ type: 'CLEAR_AUTHRESULT' })} open={authResult?.result === 'ERROR'}>
-        <Alert severity="error">{authResult?.message}</Alert>
+      <Dialog onClose={() => dispatch({ type: 'CLEAR_AUTHRESULT' })} open={authResult?.result === 'ERROR'} >
+        <Alert severity="error" style={{ alignItems: 'center' }}><Typography variant="subtitle1">{authResult?.message}</Typography></Alert>
       </Dialog>
       <Dialog onClose={() => dispatch({ type: 'SET_STAGE', stage: 'SIGNIN' })} open={authResult?.result === 'SUCCESS_USER_CREATED'}>
-        <Alert severity="success">{authResult?.message}</Alert>
+        <Alert severity="success" style={{ alignItems: 'center' }}><Typography variant="subtitle1">{authResult?.message}</Typography></Alert>
       </Dialog>
       <Dialog onClose={() => dispatch({ type: 'SET_STAGE', stage: 'SIGNIN' })} open={authResult?.result === 'SUCCESS_PASSWORD_CHANGED'}>
-        <Alert severity="success">{authResult?.message}</Alert>
+        <Alert severity="success" style={{ alignItems: 'center' }}><Typography variant="subtitle1">{authResult?.message}</Typography></Alert>
       </Dialog>
       <Dialog onClose={() => dispatch({ type: 'SET_STAGE', stage: 'SIGNIN' })} open={authResult?.result === 'SUCCESS'}>
-        <Alert severity="success">{authResult?.message}</Alert>
+        <Alert severity="success" style={{ alignItems: 'center' }}><Typography>{authResult?.message}</Typography></Alert>
       </Dialog>
     </>
   );

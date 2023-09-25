@@ -1,7 +1,7 @@
 import { ILabelsContact, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { resultError } from '../responseMessages';
-import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 
 export const getLabelsContact: RequestHandler = async (req, res) => {
   //  console.log('getLabelsContact', req.params.contactId ? req.params.contactId : 666);

@@ -1,7 +1,7 @@
+import { acquireReadTransaction } from '@gdmn-nxt/db-connection';
 import { INotification } from '@gdmn-nxt/socket';
 import { IDataSchema } from '@gsbelarus/util-api-types';
 import { resultError } from 'apps/gdmn-nxt-server/src/app/responseMessages';
-import { acquireReadTransaction } from 'apps/gdmn-nxt-server/src/app/utils/db-connection';
 
 interface IMapOfNotifications {
   [key: string]: INotification[];

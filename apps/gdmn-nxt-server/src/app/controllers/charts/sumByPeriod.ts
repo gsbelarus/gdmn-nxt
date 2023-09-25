@@ -1,7 +1,7 @@
 import { IDataSchema, IRequestResult, ITableSchema } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { resultError } from '../../responseMessages';
-import { getReadTransaction, releaseReadTransaction } from '../../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
 import { sqlQuery } from '../../utils/sqlQuery';
 
 export const getSumByPeriod: RequestHandler = async(req, res) => {

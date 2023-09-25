@@ -1,30 +1,36 @@
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Switch, Typography } from '@mui/material';
 import { GridColDef } from '@mui/x-data-grid-pro';
 import StyledGrid from '../../../components/Styled/styled-grid/styled-grid';
-import { useDeleteUserGroupLineMutation, useGetUserGroupLineQuery } from '../../../features/permissions';
+import { useDeleteUserGroupLineMutation, useGetUserGroupLineQuery, useUpdateUserGroupLineMutation } from '../../../features/permissions';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { useMemo } from 'react';
+import { ChangeEvent, useMemo } from 'react';
+import { IUserGroup, IUserGroupLine } from '@gsbelarus/util-api-types';
 
 interface IUsersProps{
-  groupID: number;
+  group?: IUserGroup;
 };
 
 export function Users(props: IUsersProps) {
-  const { groupID } = props;
+  const { group } = props;
 
-  const { data: users, isFetching: usersFetching, isLoading: usersLoading } = useGetUserGroupLineQuery(groupID);
+  const { data: users, isFetching: usersFetching, isLoading: usersLoading } = useGetUserGroupLineQuery(group?.ID ?? -1, { skip: !group?.ID });
+  const [updateUser] = useUpdateUserGroupLineMutation();
   const [deleteUserGroupLine] = useDeleteUserGroupLineMutation();
 
   const onDelete = (id: number) => (e: any) => {
     deleteUserGroupLine(id);
   };
 
+  const onUserChange = (user: IUserGroupLine) => (e: ChangeEvent<HTMLInputElement>) => {
+    updateUser({
+      ...user,
+      REQUIRED_2FA: e.target.checked
+    });
+  };
+
   const columns: GridColDef[] = [
     { field: 'NAME', headerName: 'Логин', minWidth: 150,
       valueGetter: ({ row }) => row.USER.NAME
-    },
-    { field: 'FULLNAME', headerName: 'Полное имя', minWidth: 150,
-      valueGetter: ({ row }) => row.USER.FULLNAME
     },
     {
       field: 'CONTACT',
@@ -40,6 +46,14 @@ export function Users(props: IUsersProps) {
           </Box>
         );
       },
+    },
+    { field: 'REQUIRED_2FA', headerName: '2FA', width: 100, resizable: false,
+      renderCell: ({ value = false, row }) =>
+        <Switch
+          checked={value}
+          onChange={onUserChange(row)}
+          disabled={group?.REQUIRED_2FA ?? false}
+        />
     },
     {
       field: 'ACTIONS',
@@ -76,7 +90,7 @@ export function Users(props: IUsersProps) {
         disableSelectionOnClick
       />
     </Box>,
-  [users, usersLoading]);
+  [users, usersLoading, group]);
 
   return <>
     {UsersView}

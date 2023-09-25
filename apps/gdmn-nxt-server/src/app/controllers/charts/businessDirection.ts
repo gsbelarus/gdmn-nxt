@@ -1,7 +1,7 @@
 import { IChartBusinessDirection, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { resultError } from '../../responseMessages';
-import { acquireReadTransaction } from '../../utils/db-connection';
+import { acquireReadTransaction } from '@gdmn-nxt/db-connection';
 
 interface IMapOfArrays {
   [key: string]: any;

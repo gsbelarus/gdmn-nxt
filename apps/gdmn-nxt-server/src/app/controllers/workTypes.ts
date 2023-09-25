@@ -1,7 +1,7 @@
 import { IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { resultError } from '../responseMessages';
-import { getReadTransaction, releaseReadTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
 
 const get: RequestHandler = async (req, res) => {
   const { attachment, transaction } = await getReadTransaction(req.sessionID);

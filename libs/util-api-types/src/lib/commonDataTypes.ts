@@ -96,6 +96,9 @@ export interface IProfileSettings {
   LASTVERSION?: string;
   EMAIL?: string;
   SEND_EMAIL_NOTIFICATIONS?: boolean;
+  ENABLED_2FA?: boolean;
+  REQUIRED_2FA?: boolean;
+  SECRETKEY?: string;
 }
 
 export enum ColorMode {

@@ -44,10 +44,15 @@ export default function componentStyleOverrides(theme: ThemeOptions): Components
     },
     MuiButton: {
       styleOverrides: {
+        text: {
+          letterSpacing: '1px'
+        },
         contained: {
           color: theme.mainContent.buttonTextColor,
-          // fontWeight: 500,
-          // borderRadius: '4px'
+          letterSpacing: '1px'
+        },
+        outlined: {
+          letterSpacing: '1px'
         }
       }
     },

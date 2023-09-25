@@ -18,6 +18,8 @@ export type AuthResult =
 
   | 'UNKNOWN_USER'
   | 'INVALID_PASSWORD'
+  | 'REQUIRED_2FA'
+  | 'ENABLED_2FA'
   /** email unknown to the system */
   | 'INVALID_EMAIL'
   | 'ACCESS_DENIED'
@@ -32,4 +34,4 @@ export interface IAuthResult {
   userProfile?: IUserProfile;
 };
 
-export const authResult = (result: AuthResult, message?: string): IAuthResult => ({ result, message });
+export const authResult = (result: AuthResult, message?: string, userProfile?: IUserProfile): IAuthResult => ({ result, message, userProfile });

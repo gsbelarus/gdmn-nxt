@@ -26,9 +26,9 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 interface IGroupList {
   groups: IUserGroup[];
-  setSelectedUserGroup?: Dispatch<SetStateAction<number>>;
-  selectedUserGroup: number;
-  onEdit: (id: number) => (e: any) => void;
+  setSelectedUserGroup?: Dispatch<SetStateAction<IUserGroup | undefined>>;
+  selectedUserGroup: IUserGroup;
+  onEdit: (id: IUserGroup) => (e: any) => void;
 };
 
 export const GroupList = (props: IGroupList) => {
@@ -36,8 +36,8 @@ export const GroupList = (props: IGroupList) => {
 
   const classes = useStyles();
 
-  const onClick = (id:number) => (e: any) => {
-    setSelectedUserGroup && setSelectedUserGroup(id);
+  const onClick = (group: IUserGroup) => (e: any) => {
+    setSelectedUserGroup && setSelectedUserGroup(group);
   };
 
   return <List>
@@ -45,7 +45,7 @@ export const GroupList = (props: IGroupList) => {
       <ListItem
         className={`
           ${classes.listItem}
-          ${group.ID === selectedUserGroup ? classes.listItemSelected : ''}
+          ${group.ID === selectedUserGroup?.ID ? classes.listItemSelected : ''}
         `}
         key={group.ID}
         button
@@ -53,7 +53,7 @@ export const GroupList = (props: IGroupList) => {
         sx={{
           py: 2,
         }}
-        onClick={onClick(group.ID)}
+        onClick={onClick(group)}
       >
         <ListItemText>
           <Typography variant="body1">{group.NAME}</Typography>
@@ -62,7 +62,7 @@ export const GroupList = (props: IGroupList) => {
             className="actions"
             hidden
           >
-            <IconButton size="small" onClick={onEdit(group.ID)}>
+            <IconButton size="small" onClick={onEdit(group)}>
               <EditIcon fontSize="small" color="primary" />
             </IconButton>
           </div>

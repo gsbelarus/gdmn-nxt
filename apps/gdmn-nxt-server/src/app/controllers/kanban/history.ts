@@ -2,7 +2,7 @@ import { IDataSchema, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { importedModels } from '../../utils/models';
 import { resultError } from '../../responseMessages';
-import { commitTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../../utils/db-connection';
+import { commitTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 
 const get: RequestHandler = async (req, res) => {
   const cardId = parseInt(req.params.cardId);

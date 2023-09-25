@@ -1,6 +1,6 @@
 import { IBusinessProcess, IContactPerson, ICustomer, IDataSchema, ILabelsContact, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
-import { acquireReadTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../utils/db-connection';
+import { acquireReadTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { resultError } from '../responseMessages';
 import { genId } from '../utils/genId';
 
@@ -87,11 +87,11 @@ export const getContacts: RequestHandler = async (req, res) => {
             ${req.params.taxId ? `JOIN gd_companycode cc ON cc.companykey = c.id AND cc.taxid = '${req.params.taxId}'` : ''}
             ${req.params.rootId ? `JOIN GD_CONTACT rootItem ON c.LB > rootItem.LB AND c.RB <= rootItem.RB AND rootItem.ID = ${req.params.rootId}` : ''}
             ${DEPARTMENTS || CONTRACTS || WORKTYPES
-              ? `JOIN USR$CRM_CUSTOMER cust ON cust.USR$CUSTOMERKEY = c.ID
+    ? `JOIN USR$CRM_CUSTOMER cust ON cust.USR$CUSTOMERKEY = c.ID
                 ${CONTRACTS ? `AND cust.USR$JOBKEY IN (${CONTRACTS})` : ''}
                 ${DEPARTMENTS ? `AND cust.USR$DEPOTKEY IN (${DEPARTMENTS})` : ''}
                 ${WORKTYPES ? `AND cust.USR$JOBWORKKEY IN (${WORKTYPES})` : ''}`
-              : ''}
+    : ''}
             ${LABELS ? `JOIN USR$CRM_CONTACT_LABELS lab ON lab.USR$CONTACTKEY = c.ID AND lab.USR$LABELKEY IN (${LABELS})` : ''}
             ${BUSINESSPROCESSES ? `JOIN USR$CROSS1242_1980093301 bpcross ON bpcross.USR$GD_CONTACTKEY = c.ID AND bpcross.USR$BG_BISNESS_PROCKEY IN (${BUSINESSPROCESSES})` : ''}
           WHERE
@@ -132,12 +132,12 @@ export const getContacts: RequestHandler = async (req, res) => {
           ${req.params.taxId ? `JOIN gd_companycode cc ON cc.companykey = c.id AND cc.taxid = '${req.params.taxId}'` : ''}
           ${req.params.rootId ? `JOIN GD_CONTACT rootItem ON c.LB > rootItem.LB AND c.RB <= rootItem.RB AND rootItem.ID = ${req.params.rootId}` : ''}
           ${DEPARTMENTS || CONTRACTS || WORKTYPES
-            ? `JOIN USR$CRM_CUSTOMER cust ON cust.USR$CUSTOMERKEY = c.ID
+    ? `JOIN USR$CRM_CUSTOMER cust ON cust.USR$CUSTOMERKEY = c.ID
               ${CONTRACTS ? `AND cust.USR$JOBKEY IN (${CONTRACTS})` : ''}
               ${DEPARTMENTS ? `AND cust.USR$DEPOTKEY IN (${DEPARTMENTS})` : ''}
               ${WORKTYPES ? `AND cust.USR$JOBWORKKEY IN (${WORKTYPES})` : ''}`
-            : ''
-          }
+    : ''
+}
           ${LABELS ? `JOIN USR$CRM_CONTACT_LABELS lab ON lab.USR$CONTACTKEY = c.ID AND lab.USR$LABELKEY IN (${LABELS})` : ''}
           ${BUSINESSPROCESSES ? `JOIN USR$CROSS1242_1980093301 bpcross ON bpcross.USR$GD_CONTACTKEY = c.ID AND bpcross.USR$BG_BISNESS_PROCKEY IN (${BUSINESSPROCESSES})` : ''}
         WHERE
@@ -405,7 +405,7 @@ export const deleteContact: RequestHandler = async (req, res) => {
   }
 };
 
-export const getContactHierarchy : RequestHandler = async (req, res) => {
+export const getContactHierarchy: RequestHandler = async (req, res) => {
   const { attachment, transaction } = await getReadTransaction(req.sessionID);
   try {
     const _schema = { };
@@ -460,8 +460,7 @@ const upsertLabels = async(firebirdPropsL: any, contactId: number, labels: ILabe
         DELETE FROM USR$CRM_CONTACT_LABELS
         WHERE USR$CONTACTKEY = ?` ;
 
-      await attachment.execute(transaction, sql, [contactId])
-
+      await attachment.execute(transaction, sql, [contactId]);
     } catch (error) {
       console.error('upsertLabels', error);
     }
@@ -691,8 +690,7 @@ const upsertBusinessProcesses = async (firebirdPropsL: any, contactId: number, b
         DELETE FROM USR$CROSS1242_1980093301
         WHERE USR$GD_CONTACTKEY = ?` ;
 
-      await attachment.execute(transaction, sql, [contactId])
-
+      await attachment.execute(transaction, sql, [contactId]);
     } catch (error) {
       console.error('upsertBusinessProcesses', error);
     }

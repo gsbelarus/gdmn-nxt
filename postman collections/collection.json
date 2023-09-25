@@ -1311,7 +1311,193 @@
 					"response": []
 				}
 			],
-			"_postman_id": "e105c407-5dcd-4ee5-a72e-92a242c0e3bf"
+			"id": "e105c407-5dcd-4ee5-a72e-92a242c0e3bf"
+		},
+		{
+			"name": "Права доступа",
+			"item": [
+				{
+					"name": "Группы пользователей",
+					"id": "f1adf5fa-53fb-4b59-aaae-813318f3f326",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"NAME\": \"Ненадёжные\",\r\n    \"DESCRIPTION\": \"Группа для тестирования 2FA\",\r\n    \"REQUIRED_2FA\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/permissions/usergroups/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"permissions",
+								"usergroups",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "147006945"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Группы пользователей",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "a66f6145-cc71-4c34-931b-4d7050080558",
+								"exec": [
+									"pm.environment.set('DISABLE_JWT_CHECK', 'true');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "80c6643d-98fa-43af-9356-8f9a335f2554",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/permissions/usergroups"
+					},
+					"response": []
+				},
+				{
+					"name": "Пользователи группы",
+					"id": "eec3ba74-0451-4fb9-9649-621021cf151e",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/permissions/usergroupsline/:groupId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"permissions",
+								"usergroupsline",
+								":groupId"
+							],
+							"variable": [
+								{
+									"key": "groupId",
+									"value": "358082668"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Пользователи группы",
+					"id": "8ea78902-2703-4880-93de-10f330f9addf",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ID\": -1,\r\n    \"USERGROUP\": {\r\n        \"ID\": 358082668,\r\n        \"NAME\": \"\"\r\n    },\r\n    \"USER\": {\r\n        \"ID\": 149233281,\r\n        \"NAME\": \"Director\",\r\n        \"FULLNAME\": null,\r\n        \"DISABLED\": 0,\r\n        \"CONTACT\": {\r\n            \"ID\": 161548773,\r\n            \"NAME\": \"Скуратов Александр Геннадьевич\"\r\n        }\r\n    },\r\n    \"REQUIRED_2FA\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseUrl}}/permissions/usergroupsline"
+					},
+					"response": []
+				},
+				{
+					"name": "Пользователи группы",
+					"id": "274fe4fb-4fd2-49d3-8d4f-5850e56615ad",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"USERGROUP\": {\r\n        \"ID\": 358082668,\r\n        \"NAME\": \"\"\r\n    },\r\n    \"USER\": {\r\n        \"ID\": 149233281,\r\n        \"NAME\": \"Director\",\r\n        \"FULLNAME\": null,\r\n        \"DISABLED\": 0,\r\n        \"CONTACT\": {\r\n            \"ID\": 161548773,\r\n            \"NAME\": \"Скуратов Александр Геннадьевич\"\r\n        }\r\n    },\r\n    \"REQUIRED_2FA\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/permissions/usergroupsline/:Id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"permissions",
+								"usergroupsline",
+								":Id"
+							],
+							"variable": [
+								{
+									"key": "Id",
+									"value": "363284752"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "a0a5aa4b-983f-4c0e-b7dc-123d9c86d408"
+		},
+		{
+			"name": "Аутентификация",
+			"item": [
+				{
+					"name": "SignIn",
+					"id": "953f3c3f-da61-42a0-ba49-832e080b73f1",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"userName\": \"Administrator\",\r\n  \"password\": \"1502\",\r\n  \"employeeMode\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseUrl}}/user/signin"
+					},
+					"response": []
+				}
+			],
+			"id": "e006d411-a9d9-4ceb-82e4-94dab88a7f0b"
 		}
 	],
 	"auth": {
@@ -1325,7 +1511,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "fbf687d5-dfad-49a5-a366-e9a55540cf30",
+				"id": "7b415181-6ffa-482b-bac6-90329ffd72a9",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1335,7 +1521,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "630def5a-4096-4ac6-b03f-6603cc58819b",
+				"id": "970681fe-b5a2-40fe-91d4-931203088365",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1345,9 +1531,15 @@
 	],
 	"variable": [
 		{
-			"id": "51cd4015-d4d2-4693-88a4-a700830247ae",
+			"id": "afb8cc80-dfc4-42c6-8939-9172841884bb",
 			"key": "baseUrl",
 			"value": "http://localhost:3333/api/v1",
+			"type": "string"
+		},
+		{
+			"id": "3de59ed8-717f-4970-83b0-b6a90e5ba0f6",
+			"key": "apiKey",
+			"value": "123",
 			"type": "string"
 		}
 	]

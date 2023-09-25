@@ -1,10 +1,9 @@
-import { IDataSchema, IRequestResult } from "@gsbelarus/util-api-types";
-import { RequestHandler } from "express";
-import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from "../utils/db-connection";
-import { resultError } from "../responseMessages";
+import { IDataSchema, IRequestResult } from '@gsbelarus/util-api-types';
+import { RequestHandler } from 'express';
+import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
+import { resultError } from '../responseMessages';
 
-const get: RequestHandler = async (req, res)  => {
-
+const get: RequestHandler = async (req, res) => {
   const { attachment, transaction } = await getReadTransaction(req.sessionID);
 
   try {
@@ -41,28 +40,26 @@ const get: RequestHandler = async (req, res)  => {
 
     const result: IRequestResult = {
       queries: {
-        ...Object.fromEntries(await Promise.all(queries.map( q => execQuery(q) )))
+        ...Object.fromEntries(await Promise.all(queries.map(q => execQuery(q))))
       },
       _schema
     };
 
     return res.status(200).json(result);
-  } catch(error) {
-
+  } catch (error) {
     return res.status(500).send(resultError(error.message));
-  }finally {
+  } finally {
     await releaseReadTransaction(req.sessionID);
   }
 };
 
 
 const add: RequestHandler = async(req, res) => {
-
   const { NAME } = req.body;
   let { PARENT = null } = req.body;
 
   if (!NAME) {
-    return res.status(422).send(resultError('Отсутсвует наименование'))
+    return res.status(422).send(resultError('Отсутсвует наименование'));
   }
 
   if (PARENT === 0) PARENT = null;
@@ -70,7 +67,6 @@ const add: RequestHandler = async(req, res) => {
   const { attachment, transaction } = await startTransaction(req.sessionID);
 
   try {
-
     const _schema = {};
 
     const execQuery = async ({ name, query, params }: { name: string, query: string, params?: any[] }) => {
@@ -115,28 +111,26 @@ const add: RequestHandler = async(req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        ...Object.fromEntries(await Promise.all(queries.map( q => execQuery(q) )))
+        ...Object.fromEntries(await Promise.all(queries.map(q => execQuery(q))))
       },
       _schema
     };
 
     return res.status(200).json(result);
   } catch (error) {
-      return res.status(500).send(resultError(error.message));
+    return res.status(500).send(resultError(error.message));
   } finally {
     await releaseTransaction(req.sessionID, transaction);
   };
-
-}
+};
 
 const update: RequestHandler = async(req, res) => {
-
   const { id } = req.params;
   const { NAME } = req.body;
   let { PARENT = null } = req.body;
 
   if (!NAME) {
-    return res.status(422).send(resultError('Отсутсвует наименование'))
+    return res.status(422).send(resultError('Отсутсвует наименование'));
   }
 
   if (PARENT === 0) PARENT = null;
@@ -144,7 +138,6 @@ const update: RequestHandler = async(req, res) => {
   const { attachment, transaction } = await startTransaction(req.sessionID);
 
   try {
-
     const _schema: IDataSchema = {
     };
 
@@ -194,7 +187,7 @@ const update: RequestHandler = async(req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        ...Object.fromEntries(await Promise.all(queries.map( q => execQuery(q) )))
+        ...Object.fromEntries(await Promise.all(queries.map(q => execQuery(q))))
       },
       _params: [{ id: id, body: req.body }],
       _schema
@@ -206,14 +199,14 @@ const update: RequestHandler = async(req, res) => {
   } finally {
     await releaseTransaction(req.sessionID, transaction);
   }
-}
+};
 
 const remove: RequestHandler = async(req, res) => {
   const { id } = req.params;
   const { fetchAsObject, releaseTransaction } = await startTransaction(req.sessionID);
 
   try {
-    const sql =`
+    const sql = `
       EXECUTE BLOCK(
         ID INTEGER = :id
       )

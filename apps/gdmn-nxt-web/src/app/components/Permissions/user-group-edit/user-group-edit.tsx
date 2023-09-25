@@ -9,6 +9,8 @@ import ConfirmDialog from '../../../confirm-dialog/confirm-dialog';
 import DeleteIcon from '@mui/icons-material/Delete';
 import styles from './user-group-edit.module.less';
 import CustomizedDialog from '../../Styled/customized-dialog/customized-dialog';
+import { FormControlLabel } from '@mui/material';
+import { Checkbox } from '@mui/material';
 
 const useStyles = makeStyles(() => ({
   dialog: {
@@ -54,9 +56,10 @@ export function UserGroupEdit(props: UserGroupEditProps) {
   const classes = useStyles();
 
   const initValue: IUserGroup = {
-    ID: userGroup?.ID || -1,
-    NAME: userGroup?.NAME || '',
-    DESCRIPTION: userGroup?.DESCRIPTION || '',
+    ID: userGroup?.ID ?? -1,
+    NAME: userGroup?.NAME ?? '',
+    DESCRIPTION: userGroup?.DESCRIPTION ?? '',
+    REQUIRED_2FA: userGroup?.REQUIRED_2FA ?? false
   };
 
   const formik = useFormik<IUserGroup>({
@@ -104,14 +107,13 @@ export function UserGroupEdit(props: UserGroupEditProps) {
     setConfirmOpen(false);
   }, []);
 
-
   return (
     <CustomizedDialog
       open={open}
       onClose={onClose}
     >
       <DialogTitle>
-        {userGroup ? `Редактирование: ${userGroup.NAME}` : 'Добавление'}
+        {userGroup ? `Редактирование: ${userGroup.NAME}` : 'Добавление группы'}
       </DialogTitle>
       <DialogContent dividers>
         <FormikProvider value={formik}>
@@ -142,6 +144,16 @@ export function UserGroupEdit(props: UserGroupEditProps) {
                 onChange={formik.handleChange}
                 value={formik.values.DESCRIPTION}
                 helperText={formik.errors.DESCRIPTION}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formik.values.REQUIRED_2FA}
+                    name="REQUIRED_2FA"
+                  />
+                }
+                onChange={formik.handleChange}
+                label="Обязательная двухфакторная аутентификация"
               />
             </Stack>
           </Form>

@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { acquireReadTransaction, startTransaction } from "../../utils/db-connection";
+import { acquireReadTransaction, startTransaction } from "@gdmn-nxt/db-connection";
 import { IKanbanFilterDeadline, IRequestResult } from "@gsbelarus/util-api-types";
 import { resultError } from "../../responseMessages";
 
@@ -95,7 +95,7 @@ const upsertLastFilter: RequestHandler = async (req, res) => {
       RETURNING ID`;
 
     const { ID: filterId } = req.body;
-    
+
     await fetchAsObject(query, { userId, filterId });
 
     const result: IRequestResult = {

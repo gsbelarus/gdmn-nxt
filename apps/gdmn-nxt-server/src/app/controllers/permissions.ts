@@ -1,8 +1,8 @@
-import { IRequestResult } from '@gsbelarus/util-api-types';
+import { IDataSchema, IRequestResult } from '@gsbelarus/util-api-types';
 import { Request, RequestHandler } from 'express';
 import { importedModels } from '../utils/models';
 import { resultError } from '../responseMessages';
-import { acquireReadTransaction, getReadTransaction, releaseReadTransaction, startTransaction } from '../utils/db-connection';
+import { acquireReadTransaction, getReadTransaction, releaseReadTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { genId } from '../utils/genId';
 import { setPermissonsCache } from '../middlewares/permissions';
 
@@ -192,11 +192,29 @@ const getUserGroups: RequestHandler = async (req, res) => {
   const { attachment, transaction } = await getReadTransaction(req.sessionID);
 
   try {
-    const _schema = {};
+    const _schema: IDataSchema = {
+      userGroups: {
+        REQUIRED_2FA: {
+          type: 'boolean'
+        }
+      }
+    };
 
     const execQuery = async ({ name, query, params }: { name: string, query: string, params?: any[] }) => {
       const rs = await attachment.executeQuery(transaction, query, []);
       const data = await rs.fetchAsObject();
+
+      const sch = _schema[name];
+
+      if (sch) {
+        for (const rec of data) {
+          for (const fld of Object.keys(rec)) {
+            if ((sch[fld]?.type === 'boolean') && rec[fld] !== null) {
+              rec[fld] = +rec[fld] === 1;
+            }
+          }
+        }
+      };
       await rs.close();
 
       return data as any;
@@ -208,7 +226,8 @@ const getUserGroups: RequestHandler = async (req, res) => {
         SELECT
           ug.ID,
           ug.USR$NAME AS NAME,
-          USR$DESCRIPTION DESCRIPTION
+          USR$DESCRIPTION DESCRIPTION,
+          USR$REQUIRED_2FA REQUIRED_2FA
         FROM USR$CRM_PERMISSIONS_USERGROUPS ug
         ORDER BY ug.USR$NAME`
     };
@@ -246,7 +265,7 @@ const upsertGroup: RequestHandler = async (req, res) => {
     const execQuery = async ({ name, query, params }: { name: string, query: string, params?: any[] }) => {
       const data = await attachment.executeSingletonAsObject(transaction, query, params);
 
-      return [name, data];
+      return [data];
     };
 
     const { erModel } = await importedModels;
@@ -280,19 +299,31 @@ const upsertGroup: RequestHandler = async (req, res) => {
     const actualFieldsNames = actualFields.join(',');
     const paramsString = actualFields.map(_ => '?').join(',');
 
-    const query = {
-      name: 'userGroup',
-      query: `
-        UPDATE OR INSERT INTO USR$CRM_PERMISSIONS_USERGROUPS(${actualFieldsNames})
-        VALUES(${paramsString})
-        MATCHING(ID)
-        RETURNING ${actualFieldsNames}`,
-      params: paramsValues,
-    };
+    const queries = [
+      {
+        name: 'userGroup',
+        query: `
+          UPDATE OR INSERT INTO USR$CRM_PERMISSIONS_USERGROUPS(${actualFieldsNames})
+          VALUES(${paramsString})
+          MATCHING(ID)
+          RETURNING ${actualFieldsNames}`,
+        params: paramsValues,
+      },
+      {
+        name: 'userGroupLine',
+        query: `
+          UPDATE USR$CRM_PERMISSIONS_UG_LINES
+          SET USR$REQUIRED_2FA = ?
+          WHERE USR$GROUPKEY = ?`,
+        params: [Number(req.body['REQUIRED_2FA'] ?? false), ID],
+      }
+    ];
 
-    const result: IRequestResult = {
+    const [userGroup, userGroupLine] = await Promise.all(queries.map(execQuery));
+
+    const result = {
       queries: {
-        ...Object.fromEntries([await Promise.resolve(execQuery(query))])
+        userGroup: userGroup[0]
       },
       _params: id ? [{ id: id }] : undefined,
       _schema
@@ -430,7 +461,8 @@ const getUserGroupLine: RequestHandler = async (req, res) => {
           u.DISABLED USER_DISABLED,
           con.ID AS CONTACT_ID,
           con.NAME AS CONTACT_NAME,
-          con.PHONE CONTACT_PHONE
+          con.PHONE CONTACT_PHONE,
+          ul.USR$REQUIRED_2FA AS REQUIRED_2FA
         FROM USR$CRM_PERMISSIONS_USERGROUPS ug
         JOIN USR$CRM_PERMISSIONS_UG_LINES ul ON ul.USR$GROUPKEY = ug.ID
         JOIN GD_USER u ON u.ID = ul.USR$USERKEY
@@ -463,11 +495,11 @@ const getUserGroupLine: RequestHandler = async (req, res) => {
       const { CONTACT_ID, CONTACT_NAME, PHONE, ...newObject } = user;
       return {
         ID: user['ID'],
+        REQUIRED_2FA: user['REQUIRED_2FA'] === 1,
         USERGROUP: { ...USERGROUP },
         USER: { ...USER }
       };
     });
-    // const [rawCross, rawActions] = await Promise.all(queries.map(execQuery));
 
     const result: IRequestResult = {
       queries: {
@@ -476,8 +508,6 @@ const getUserGroupLine: RequestHandler = async (req, res) => {
       ...(groupId ? { _params: [{ groupId: groupId }] } : {}),
       _schema
     };
-
-    // console.log(`fetch time ${new Date().getTime() - aTime} ms`);
 
     return res.status(200).send(result);
   } catch (error) {
@@ -495,8 +525,6 @@ const getUserByGroup: RequestHandler = async (req, res) => {
 
   try {
     const _schema = {};
-
-    // const aTime = new Date().getTime();
 
     const execQuery = async ({ name, query, params }: { name: string, query: string, params?: any[] }) => {
       const rs = await attachment.executeQuery(transaction, query, params);
@@ -534,7 +562,6 @@ const getUserByGroup: RequestHandler = async (req, res) => {
       const { CONTACT_ID, CONTACT_NAME, PHONE, ...newObject } = user;
       return { ...newObject, CONTACT };
     });
-    // const [rawCross, rawActions] = await Promise.all(queries.map(execQuery));
 
     const result: IRequestResult = {
       queries: {
@@ -544,8 +571,6 @@ const getUserByGroup: RequestHandler = async (req, res) => {
       _schema
     };
 
-    // console.log(`fetch time ${new Date().getTime() - aTime} ms`);
-
     return res.status(200).send(result);
   } catch (error) {
     return res.status(500).send(resultError(error.message));
@@ -554,26 +579,35 @@ const getUserByGroup: RequestHandler = async (req, res) => {
   }
 };
 
-const addUserGroupLine: RequestHandler = async (req, res) => {
+const upsertUserGroupLine: RequestHandler = async (req, res) => {
+  const isInsertMode = (req.method === 'POST');
+
+  const id = parseInt(req.params.id);
+  if (!isInsertMode) {
+    if (isNaN(id)) return res.status(422).send(resultError('Поле "id" не указано или неверного типа'));
+  };
+
   const { attachment, transaction, releaseTransaction, fetchAsObject } = await startTransaction(req.sessionID);
 
   try {
     const _schema = {};
 
-    const userExistsQuery = `
-      SELECT
-        ug.USR$NAME NAME
-      FROM USR$CRM_PERMISSIONS_UG_LINES ul
-      JOIN USR$CRM_PERMISSIONS_USERGROUPS ug ON ug.ID = ul.USR$GROUPKEY
-      WHERE
-        ul.USR$GROUPKEY != :groupId
-        AND ul.USR$USERKEY = :userId`;
+    if (isInsertMode) {
+      const userExistsQuery = `
+        SELECT
+          ug.USR$NAME NAME
+        FROM USR$CRM_PERMISSIONS_UG_LINES ul
+        JOIN USR$CRM_PERMISSIONS_USERGROUPS ug ON ug.ID = ul.USR$GROUPKEY
+        WHERE
+          ul.USR$GROUPKEY != :groupId
+          AND ul.USR$USERKEY = :userId`;
 
-    const userExists = await fetchAsObject(userExistsQuery, { groupId: req.body['USERGROUP']['ID'], userId: req.body['USER']['ID'] });
+      const userExists = await fetchAsObject(userExistsQuery, { groupId: req.body['USERGROUP']['ID'], userId: req.body['USER']['ID'] });
 
-    if (userExists.length) {
-      return res.status(409).json(resultError(`Пользователь уже добавлен в группу ${userExists[0]['NAME']}`));
-    }
+      if (userExists.length) {
+        return res.status(409).json(resultError(`Пользователь уже добавлен в группу ${userExists[0]['NAME']}`));
+      }
+    };
 
     const execQuery = async ({ name, query, params }: { name: string, query: string, params?: any[] }) => {
       const data = await attachment.executeSingletonAsObject(transaction, query, params);
@@ -586,6 +620,8 @@ const addUserGroupLine: RequestHandler = async (req, res) => {
 
     const actualFields = allFields.filter(field => {
       switch (field) {
+        case 'USR$REQUIRED_2FA':
+          return typeof req.body['REQUIRED_2FA'] !== 'undefined';
         case 'USR$USERKEY':
           return typeof req.body['USER'] !== 'undefined';
         case 'USR$GROUPKEY':
@@ -599,6 +635,8 @@ const addUserGroupLine: RequestHandler = async (req, res) => {
 
     const paramsValues = actualFields.map(field => {
       switch (field) {
+        case 'USR$REQUIRED_2FA':
+          return req.body['REQUIRED_2FA'];
         case 'USR$USERKEY':
           return req.body['USER']['ID'];
         case 'USR$GROUPKEY':
@@ -612,7 +650,7 @@ const addUserGroupLine: RequestHandler = async (req, res) => {
       name: 'users',
       query: `
       UPDATE OR INSERT INTO USR$CRM_PERMISSIONS_UG_LINES(${actualFields})
-      VALUES(?, ?)
+      VALUES(${actualFields.map(f => '?')})
       MATCHING(USR$USERKEY)
       RETURNING ID, USR$USERKEY, USR$GROUPKEY`,
       params: paramsValues,
@@ -709,7 +747,7 @@ export const PermissionsController = {
   getActions,
   getUserGroups,
   getUserByGroup,
-  addUserGroupLine,
+  upsertUserGroupLine,
   removeUserGroupLine,
   getUserGroupLine,
   getPermissionByUser

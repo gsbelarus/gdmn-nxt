@@ -1,5 +1,5 @@
 import { IUserGroupLine } from '@gsbelarus/util-api-types';
-import { Autocomplete, Box, Button, createFilterOptions, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { Autocomplete, Box, Button, Checkbox, createFilterOptions, DialogActions, DialogContent, DialogTitle, FormControlLabel, Stack, TextField } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { Form, FormikProvider, useFormik } from 'formik';
 import { useCallback, useEffect, useState } from 'react';
@@ -48,6 +48,7 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
     ID: userGroupLine?.ID || -1,
     USER: userGroupLine?.USER,
     USERGROUP: userGroupLine?.USERGROUP,
+    REQUIRED_2FA: userGroupLine?.REQUIRED_2FA ?? false
   };
 
   const formik = useFormik<IUserGroupLine>({
@@ -79,7 +80,7 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
 
   const filterOptions = createFilterOptions({
     matchFrom: 'any',
-    stringify: (option:any) => option.NAME + option.CONTACT.NAME
+    stringify: (option: any) => option.NAME + option.CONTACT.NAME
   });
 
   const handleClose = useCallback(() => {
@@ -99,7 +100,7 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
           <Form id="mainForm" onSubmit={formik.handleSubmit}>
             <Stack direction="column" spacing={3}>
               <Autocomplete
-                options={users?.filter(user => existsUsers.findIndex(eu => eu.USER?.ID === user.ID) < 0) || []}
+                options={users?.filter(user => existsUsers.findIndex(eu => eu.USER?.ID === user.ID) < 0) ?? []}
                 getOptionLabel={option => option.NAME}
                 filterOptions={filterOptions}
                 value={users?.find(el => el.ID === formik.values.USER?.ID) || null}
@@ -133,6 +134,16 @@ export function UserGroupLineEdit(props: UserGroupLineEditProps) {
                     helperText={formik.errors.USER}
                   />
                 )}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formik.values.REQUIRED_2FA}
+                    name="REQUIRED_2FA"
+                  />
+                }
+                onChange={formik.handleChange}
+                label="Обязательная двухфакторная аутентификация"
               />
             </Stack>
           </Form>

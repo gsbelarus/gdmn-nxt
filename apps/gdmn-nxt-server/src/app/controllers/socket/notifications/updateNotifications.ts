@@ -1,4 +1,4 @@
-import { startTransaction } from '../../../utils/db-connection';
+import { startTransaction } from '@gdmn-nxt/db-connection';
 
 export const updateNotifications = async (sessionId: string) => {
   const { releaseTransaction, fetchAsObject } = await startTransaction(sessionId);

@@ -1,12 +1,12 @@
 import { ICustomerContract, IDataSchema, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { ResultSet } from 'node-firebird-driver-native';
-import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { resultError } from '../responseMessages';
 import { genId } from '../utils/genId';
 import { importedModels } from '../utils/models';
 
-const eintityName = 'TgdcAttrUserDefinedUSR_BG_CONTRACTJOB'
+const eintityName = 'TgdcAttrUserDefinedUSR_BG_CONTRACTJOB';
 
 const get: RequestHandler = async (req, res) => {
   const { attachment, transaction } = await getReadTransaction(req.sessionID);
@@ -94,14 +94,14 @@ const upsert: RequestHandler = async (req, res) => {
   try {
     const isInsertMode = id ? false : true;
 
-    let ID: number = Number(id);
+    let ID = Number(id);
     if (isInsertMode) {
       ID = await genId(attachment, transaction);
     }
 
     const { erModel } = await importedModels;
     const allFields = [...new Set(erModel.entities[eintityName].attributes.map(attr => attr.name))];
-    const actualFields = allFields.filter( field => typeof req.body[field] !== 'undefined' );
+    const actualFields = allFields.filter(field => typeof req.body[field] !== 'undefined');
     const paramsValues = actualFields.map(field => {
       return req.body[field];
     });
@@ -118,13 +118,13 @@ const upsert: RequestHandler = async (req, res) => {
       for (const [key, value] of Object.entries(requiredFields)) {
         if (!actualFields.includes(key)) {
           actualFields.push(key);
-          paramsValues.push(value)
+          paramsValues.push(value);
         }
       }
     };
 
     const actualFieldsNames = actualFields.join(',');
-    const paramsString = actualFields.map( _ => '?' ).join(',');
+    const paramsString = actualFields.map(_ => '?').join(',');
     const returnFieldsNames = allFields.join(',');
 
 
@@ -177,7 +177,7 @@ const remove: RequestHandler = async(req, res) => {
 
         SUSPEND;
       END`,
-      [ id ]
+      [id]
     );
 
     const data: {SUCCESS: number}[] = await result.fetchAsObject();

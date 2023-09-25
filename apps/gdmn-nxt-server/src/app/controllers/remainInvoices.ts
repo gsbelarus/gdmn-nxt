@@ -2,7 +2,7 @@ import { IQuery, IDataRecord, IRequestResult } from '@gsbelarus/util-api-types';
 import { parseIntDef } from '@gsbelarus/util-useful';
 import { RequestHandler } from 'express';
 import { resultError } from '../responseMessages';
-import { getReadTransaction, releaseReadTransaction } from '../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
 
 export const getRemainsInvoices: RequestHandler = async (req, res) => {
   const onDate = new Date(parseIntDef(req.params.onDate, new Date().getTime()));
@@ -74,7 +74,7 @@ export const getRemainsInvoices: RequestHandler = async (req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        ...Object.fromEntries(await Promise.all(queries.map( q => execQuery(q) )))
+        ...Object.fromEntries(await Promise.all(queries.map(q => execQuery(q))))
       },
       _params: [{ dateBegin: onDate.getTime(), onDate }],
       _schema

@@ -1,7 +1,7 @@
 import { IDataSchema, IQuery, IDataRecord, IRequestResult } from "@gsbelarus/util-api-types";
 import { parseIntDef } from "@gsbelarus/util-useful";
 import { RequestHandler } from "express";
-import { getReadTransaction, releaseReadTransaction } from "./utils/db-connection";
+import { getReadTransaction, releaseReadTransaction } from "@gdmn-nxt/db-connection";
 
 export const getReconciliationStatement: RequestHandler = async (req, res) => {
 

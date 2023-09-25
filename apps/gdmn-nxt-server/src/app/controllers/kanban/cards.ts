@@ -2,7 +2,7 @@ import { IChanges, IDeal, IEntities, IKanbanCard, IKanbanColumn, IKanbanHistory,
 import { RequestHandler } from 'express';
 import { ResultSet } from 'node-firebird-driver-native';
 import { resultError } from '../../responseMessages';
-import { acquireReadTransaction, commitTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '../../utils/db-connection';
+import { acquireReadTransaction, commitTransaction, getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { genId } from '../../utils/genId';
 import { addHistory } from './history';
 

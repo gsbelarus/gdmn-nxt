@@ -20,9 +20,6 @@ type IUsersRequestResult = IRequestResult<{ users: IUser[]}>;
 
 type IPermissionByUserRequestResult = IRequestResult<{ action: IPermissionByUser}>;
 
-const SetActions = (num:number) => {
-  const { data } = useGetActionsQuery();
-};
 
 export const permissionsApi = createApi({
   reducerPath: 'permissions',
@@ -61,17 +58,6 @@ export const permissionsApi = createApi({
         result
           ? [{ type: 'Matrix', id: result?.ID }, { type: 'Matrix', id: 'LIST' }, { type: 'ActionByUser', id: 'LIST' }]
           : [{ type: 'Matrix', id: 'LIST' }]
-    }),
-    getUsersByGroup: builder.query<UsersResponse, number>({
-      query: (groupID) => `permissions/userGroups/${groupID}/users`,
-      transformResponse: (response: IUsersRequestResult) => response.queries.users || [],
-      providesTags: (result) =>
-        result
-          ? [
-            ...result.map(({ ID }) => ({ type: 'Users' as const, ID })),
-            { type: 'Users', id: 'LIST' }
-          ]
-          : [{ type: 'Users', id: 'LIST' }]
     }),
     getUserGroupLine: builder.query<IUserGroupLine[], number>({
       query: (groupID) => `permissions/usergroupsline/${groupID}`,
@@ -113,6 +99,18 @@ export const permissionsApi = createApi({
           body
         };
       },
+      async onQueryStarted(group, { getCacheEntry, dispatch, queryFulfilled }) {
+        const updateResult = dispatch(
+          permissionsApi.util.updateQueryData('getUserGroupLine', group?.ID ?? -1, (draft) => {
+            draft.forEach(d => d.REQUIRED_2FA = group.REQUIRED_2FA);
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch (error) {
+          updateResult.undo();
+        }
+      },
       invalidatesTags: (result) =>
         result
           ? [{ type: 'UserGroups', id: result?.ID }, { type: 'UserGroups', id: 'LIST' }]
@@ -135,6 +133,20 @@ export const permissionsApi = createApi({
         body
       }),
       invalidatesTags: [{ type: 'Users', id: 'LIST' }]
+    }),
+    updateUserGroupLine: builder.mutation<IUserGroupLine, Partial<IUserGroupLine>>({
+      query(data) {
+        const { ID, ...body } = data;
+        return {
+          url: `permissions/userGroupsLine/${ID}`,
+          method: 'PUT',
+          body
+        };
+      },
+      invalidatesTags: (result) =>
+        result
+          ? [{ type: 'Users', id: result?.ID }, { type: 'Users', id: 'LIST' }]
+          : [{ type: 'Users', id: 'LIST' }],
     }),
     deleteUserGroupLine: builder.mutation<{ id: number }, number>({
       query: (id) => ({
@@ -164,13 +176,14 @@ export const {
   useGetActionsQuery,
   useGetUserGroupsQuery,
   useUpdateMatrixMutation,
-  useGetUsersByGroupQuery,
   useAddUserGroupLineMutation,
   useAddUserGroupMutation,
   useDeleteUseGroupMutation,
   useDeleteUserGroupLineMutation,
   useUpdateUserGroupMutation,
   useGetUserGroupLineQuery,
+  useUpdateUserGroupLineMutation,
   useGetPermissionByUserQuery
 } = permissionsApi;
+
 

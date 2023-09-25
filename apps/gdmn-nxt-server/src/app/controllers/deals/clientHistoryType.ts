@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express';
-import { acquireReadTransaction, startTransaction} from '../../utils/db-connection';
+import { acquireReadTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { resultError } from '../../responseMessages';
 import { IRequestResult } from '@gsbelarus/util-api-types';
 const get: RequestHandler = async (req, res) => {
-  const { fetchAsObject, releaseReadTransaction} = await acquireReadTransaction(req.sessionID);
+  const { fetchAsObject, releaseReadTransaction } = await acquireReadTransaction(req.sessionID);
 
   try {
     const _schema = {};

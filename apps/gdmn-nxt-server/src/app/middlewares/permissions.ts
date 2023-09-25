@@ -1,17 +1,19 @@
 import { RequestHandler } from 'express';
-import { acquireReadTransaction, startTransaction } from '../utils/db-connection';
+import { acquireReadTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { nodeCache } from '../utils/cache';
 import { parseIntDef } from '@gsbelarus/util-useful';
 import { ActionName, Permissions } from '@gsbelarus/util-api-types';
 import { resultError } from '../responseMessages';
 import { config } from '@gdmn-nxt/config';
+import { ERROR_MESSAGES } from '../constants/messages';
 
 export const checkPermissions: RequestHandler = (req, res, next) => {
   const apiAccessKey = req.headers['x-api-key'] as string;
+  if (!!apiAccessKey && apiAccessKey !== config.apiAccessToken) {
+    return res.status(401).send(resultError(ERROR_MESSAGES.TOKEN_FAILED));
+  };
   if (!req.isAuthenticated()) {
-    if (!!apiAccessKey && apiAccessKey !== config.apiAccessToken) {
-      return res.status(401).send(resultError('Ваш сеанс отключён. Повторно войдите в систему'));
-    };
+    return res.status(401).send(resultError(ERROR_MESSAGES.AUTH_FAILED));
   };
   const { userId, permissions } = req.session;
   const { url, method } = req;

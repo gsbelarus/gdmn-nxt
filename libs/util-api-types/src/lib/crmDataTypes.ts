@@ -214,6 +214,7 @@ export interface IPermissionsAction extends IWithID {
 export interface IUserGroup extends IWithID {
   NAME: string;
   DESCRIPTION?: string;
+  REQUIRED_2FA?: boolean;
 };
 
 export interface IUser extends IWithID {
@@ -232,6 +233,7 @@ export interface IPermissionsView extends IWithID {
 export interface IUserGroupLine extends IWithID {
   USERGROUP: IUserGroup;
   USER?: IUser;
+  REQUIRED_2FA?: boolean;
 };
 
 export interface IPermissionByUser {

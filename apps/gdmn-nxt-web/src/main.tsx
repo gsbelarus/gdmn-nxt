@@ -78,7 +78,6 @@ const Main = () => {
 
   return (
     <div
-      aria-label='mydivdiv'
       style={{
         background: settings.customization.colorMode === ColorMode.Dark ? '#424242' : '',
         height: '100%'

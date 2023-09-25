@@ -35,7 +35,7 @@ export function UserGroups(props: UserGroupsProps) {
   const [addUserGroupLine] = useAddUserGroupLineMutation();
 
   const [searchName, setSearchName] = useState('');
-  const [selectedUserGroup, setSelectedUserGroup] = useState(-1);
+  const [selectedUserGroup, setSelectedUserGroup] = useState<IUserGroup>();
   const [openEditUserGroupForm, setOpenEditUserGroupForm] = useState(false);
   const [openAddUserGroupForm, setOpenAddUserGroupForm] = useState(false);
   const [openEditUserForm, setOpenEditUserForm] = useState(false);
@@ -50,7 +50,7 @@ export function UserGroups(props: UserGroupsProps) {
   };
 
   useEffect(() => {
-    addingIsSuccess && setSelectedUserGroup(addingResult?.ID || -1);
+    addingIsSuccess && setSelectedUserGroup(addingResult);
   }, [addingIsSuccess]);
 
   const userGroupHandlers = {
@@ -77,8 +77,8 @@ export function UserGroups(props: UserGroupsProps) {
       openEditUserGroupForm && setOpenEditUserGroupForm(false);
       openAddUserGroupForm && setOpenAddUserGroupForm(false);
     },
-    handleOnEdit: (id: number) => (e: any) => {
-      setSelectedUserGroup(id);
+    handleOnEdit: (group: IUserGroup) => (e: any) => {
+      setSelectedUserGroup(group);
       setOpenEditUserGroupForm(true);
     },
     handleAdd: () => {
@@ -98,10 +98,8 @@ export function UserGroups(props: UserGroupsProps) {
   };
 
   const UsersList = useMemo(() =>
-    selectedUserGroup > 0
-      ? <Users groupID={selectedUserGroup}/>
-      : <></>,
-  [selectedUserGroup]);
+    <Users group={userGroups?.find(ug => ug.ID === selectedUserGroup?.ID)}/>,
+  [selectedUserGroup, userGroups]);
 
   return (
     <CustomizedCard
@@ -161,13 +159,13 @@ export function UserGroups(props: UserGroupsProps) {
                     || []
                   }
                   setSelectedUserGroup={setSelectedUserGroup}
-                  selectedUserGroup={selectedUserGroup}
+                  selectedUserGroup={selectedUserGroup!}
                   onEdit={userGroupHandlers.handleOnEdit}
                 />}
             </PerfectScrollbar>
             <UserGroupEdit
               open={openEditUserGroupForm}
-              userGroup={userGroups?.find(ug => ug.ID === selectedUserGroup)}
+              userGroup={userGroups?.find(ug => ug.ID === selectedUserGroup?.ID)}
               onSubmit={userGroupHandlers.handleOnSubmit}
               onCancel={userGroupHandlers.handleCancel}
               onClose={userGroupHandlers.handleClose}
@@ -185,7 +183,7 @@ export function UserGroups(props: UserGroupsProps) {
               <Box flex={1} />
               <Button
                 variant="contained"
-                disabled={userGroupFetching || selectedUserGroup < 0}
+                disabled={userGroupFetching || !selectedUserGroup}
                 startIcon={<AddIcon fontSize="large" />}
                 onClick={() => setOpenEditUserForm(true)}
               >
@@ -198,7 +196,7 @@ export function UserGroups(props: UserGroupsProps) {
               userGroupLine={{
                 ID: -1,
                 USERGROUP: {
-                  ID: selectedUserGroup,
+                  ID: selectedUserGroup?.ID ?? -1,
                   NAME: ''
                 }
               }}

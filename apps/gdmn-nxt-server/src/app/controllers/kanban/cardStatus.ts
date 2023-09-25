@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { startTransaction } from '../../utils/db-connection';
+import { startTransaction } from '@gdmn-nxt/db-connection';
 import { IRequestResult } from '@gsbelarus/util-api-types';
 import { resultError } from '../../responseMessages';
 

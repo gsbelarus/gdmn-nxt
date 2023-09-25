@@ -2,7 +2,7 @@ import { IPhone, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { importedModels } from '../utils/models';
 import { resultError } from '../responseMessages';
-import { acquireReadTransaction, commitTransaction, getReadTransaction, releaseReadTransaction, rollbackTransaction, startTransaction } from '../utils/db-connection';
+import { acquireReadTransaction, commitTransaction, getReadTransaction, releaseReadTransaction, rollbackTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { genId } from '../utils/genId';
 import { sqlQuery } from '../utils/sqlQuery';
 

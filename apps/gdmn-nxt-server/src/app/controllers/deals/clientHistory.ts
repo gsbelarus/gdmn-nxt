@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { acquireReadTransaction, startTransaction } from '../../utils/db-connection';
+import { acquireReadTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { resultError } from '../../responseMessages';
 import { IClientHistory, IDataSchema, IRequestResult } from '@gsbelarus/util-api-types';
 

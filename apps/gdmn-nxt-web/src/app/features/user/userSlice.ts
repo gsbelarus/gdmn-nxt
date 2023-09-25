@@ -17,11 +17,14 @@ export type LoginStage =
   | 'EMPLOYEE'                 //
   | 'SIGN_IN_EMPLOYEE'         // show sign-in or sign-up screen for an employee
   | 'SIGN_IN_CUSTOMER'         // show sign-in or sign-up screen for a customer
-  | 'CREATE_CUSTOMER_ACCOUNT';
+  | 'CREATE_CUSTOMER_ACCOUNT'
+  | 'CREATE_2FA'
+  | 'SET_EMAIL'
+  | 'SIGN_IN_2FA';
 
 export interface UserState {
   loginStage: LoginStage;
-  userType?:'CUSTOMER' | 'EMPLOYEE'
+  userType?: 'CUSTOMER' | 'EMPLOYEE';
   userProfile?: IUserProfile;
   gedeminUser?: boolean;
 };
@@ -41,7 +44,12 @@ export const userSlice = createSlice({
     createCustomerAccount: () => ({ loginStage: 'CREATE_CUSTOMER_ACCOUNT' } as UserState),
     signedInEmployee: (_, action: PayloadAction<IUserProfile>) => ({ loginStage: 'OTHER_LOADINGS', userType: 'EMPLOYEE', userProfile: action.payload, gedeminUser: true } as UserState),
     signedInCustomer: (_, action: PayloadAction<IUserProfile>) => ({ loginStage: 'OTHER_LOADINGS', userType: 'CUSTOMER', userProfile: action.payload } as UserState),
-    renderApp: (state) => { state.loginStage = state.userType || 'CUSTOMER'}
+    signIn2fa: () => ({ loginStage: 'SIGN_IN_2FA' } as UserState),
+    create2fa: (_, action: PayloadAction<IUserProfile>) => ({ loginStage: 'CREATE_2FA', userProfile: { ...action.payload } } as UserState),
+    setEmail: (_, action: PayloadAction<IUserProfile>) => ({ loginStage: 'SET_EMAIL', userProfile: { ...action.payload } } as UserState),
+    renderApp: (state) => {
+      state.loginStage = state.userType || 'CUSTOMER'
+    }
   },
   extraReducers: (builder) => {
     builder.addCase(logoutUser.fulfilled, () => ({ loginStage: 'SELECT_MODE' }));
@@ -57,7 +65,10 @@ export const {
   signedInEmployee,
   signedInCustomer,
   createCustomerAccount,
-  renderApp
+  renderApp,
+  create2fa,
+  setEmail,
+  signIn2fa
 } = userSlice.actions;
 
 export default userSlice.reducer;

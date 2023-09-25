@@ -1,8 +1,8 @@
-import { IEntities, IKanbanColumn, IRequestResult } from "@gsbelarus/util-api-types";
-import { RequestHandler } from "express";
-import { ResultSet } from "node-firebird-driver-native";
-import { resultError } from "../../responseMessages";
-import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from "../../utils/db-connection";
+import { IEntities, IKanbanColumn, IRequestResult } from '@gsbelarus/util-api-types';
+import { RequestHandler } from 'express';
+import { ResultSet } from 'node-firebird-driver-native';
+import { resultError } from '../../responseMessages';
+import { getReadTransaction, releaseReadTransaction, releaseTransaction, startTransaction } from '@gdmn-nxt/db-connection';
 import { genId } from '../../utils/genId';
 
 const get: RequestHandler = async (req, res) => {
@@ -13,8 +13,8 @@ const get: RequestHandler = async (req, res) => {
   try {
     const _schema = { };
 
-    //const erModelFull = (await importERModel('TgdcAttrUserDefinedUSR_CRM_KANBAN_COLUMNS')).entities;
-    //const entites: IEntities = Object.fromEntries(Object.entries((await erModelFull).entities));
+    // const erModelFull = (await importERModel('TgdcAttrUserDefinedUSR_CRM_KANBAN_COLUMNS')).entities;
+    // const entites: IEntities = Object.fromEntries(Object.entries((await erModelFull).entities));
 
     // const allFields = [...new Set(entites['TgdcAttrUserDefinedUSR_CRM_KANBAN_COLUMNS'].attributes.map(attr => attr.name))];
     // const returnFieldsNames = allFields.join(',');
@@ -45,7 +45,7 @@ const get: RequestHandler = async (req, res) => {
 
     const result: IRequestResult = {
       queries: {
-        ...Object.fromEntries(await Promise.all(queries.map( q => execQuery(q) )))
+        ...Object.fromEntries(await Promise.all(queries.map(q => execQuery(q))))
       },
       _params: id ? [{ id: id }] : undefined,
       _schema
@@ -64,12 +64,12 @@ const upsert: RequestHandler = async (req, res) => {
 
   const { id } = req.params;
 
-  if (id && isNaN(Number(id))) return res.status(422).send(resultError(`Field ID is not defined or isn't numeric`));
+  if (id && isNaN(Number(id))) return res.status(422).send(resultError('Field ID is not defined or isn\'t numeric'));
 
   try {
     const isInsertMode = id ? false : true;
 
-    let ID: number = Number(id);
+    let ID = Number(id);
     if (isInsertMode) {
       ID = await genId(attachment, transaction);
     }
@@ -80,7 +80,7 @@ const upsert: RequestHandler = async (req, res) => {
     // const allFields = [...new Set(entites['TgdcDepartment'].attributes.map(attr => attr.name))];
 
     const allFields = ['ID', 'USR$NAME', 'USR$INDEX'];
-    const actualFields = allFields.filter( field => typeof req.body[field] !== 'undefined' );
+    const actualFields = allFields.filter(field => typeof req.body[field] !== 'undefined');
 
     const paramsValues = actualFields.map(field => {
       return req.body[field];
@@ -103,7 +103,7 @@ const upsert: RequestHandler = async (req, res) => {
     };
 
     const actualFieldsNames = actualFields.join(',');
-    const paramsString = actualFields.map( _ => '?' ).join(',');
+    const paramsString = actualFields.map(_ => '?').join(',');
     const returnFieldsNames = allFields.join(',');
 
     const sql = `

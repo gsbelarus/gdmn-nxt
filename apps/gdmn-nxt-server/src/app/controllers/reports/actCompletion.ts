@@ -1,7 +1,7 @@
 import { IDataSchema, IRequestResult } from '@gsbelarus/util-api-types';
 import { RequestHandler } from 'express';
 import { resultError } from '../../responseMessages';
-import { getReadTransaction, releaseReadTransaction } from '../../utils/db-connection';
+import { getReadTransaction, releaseReadTransaction } from '@gdmn-nxt/db-connection';
 
 export const get: RequestHandler = async(req, res) => {
   const customerId = parseInt(req.params.customerId);

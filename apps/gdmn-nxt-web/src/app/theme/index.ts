@@ -52,7 +52,7 @@ export const theme = (customization: ICustomization) => {
         paper: colors.grey[800],
         customization,
         borderColor: '#303030',
-        buttonTextColor: 'black'
+        buttonTextColor: 'white'
       }
     )
   };
