@@ -199,6 +199,7 @@ export function CustomerEdit(props: CustomerEditProps) {
   const [country, setCountry] = useState<countriesType>('Belarus');
 
   const changeCountry = (e: SelectChangeEvent) => {
+    formik.setFieldValue('PHONE', '');
     setCountry(e.target.value as countriesType);
   };
 

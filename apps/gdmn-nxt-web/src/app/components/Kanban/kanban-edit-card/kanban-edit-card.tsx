@@ -306,6 +306,7 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
   const [country, setCountry] = useState<countriesType>('Belarus');
 
   const changeCountry = (e: SelectChangeEvent) => {
+    formik.setFieldValue('DEAL.CONTACT_PHONE', '');
     setCountry(e.target.value as countriesType);
   };
 
@@ -448,7 +449,7 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
                   alignItems={'center'}
                   justifyContent={'center'}
                   spacing={2}
-                  >
+                >
                   <IconButton
                     color="primary"
                     onClick={handleStepBack}
@@ -478,7 +479,7 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
                   activeStep={stages.findIndex(stage => stage.ID === formik.values.USR$MASTERKEY)}
                   alternativeLabel
                   nonLinear
-                  >
+                >
                   {stages.map((stage, idx) =>
                     <Step
                       key={stage.ID}

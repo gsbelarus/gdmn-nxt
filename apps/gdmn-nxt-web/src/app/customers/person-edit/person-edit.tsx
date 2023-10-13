@@ -34,6 +34,7 @@ import CustomizedDialog from '../../components/Styled/customized-dialog/customiz
 import { AnyObject } from 'yup/lib/types';
 import TextFieldMasked from '../../components/textField-masked/textField-masked';
 import { countries, countriesType, getNumberMask } from '../../numberMask';
+import { set } from 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {
@@ -209,6 +210,7 @@ export function PersonEdit(props: PersonEditProps) {
   const [countrys, setCountrys] = useState<countriesType[]>([]);
 
   const changeCountrys = (index: number) => (e: SelectChangeEvent) => {
+    handlePhoneChange(index, '');
     const newMas: countriesType[] = countrys;
     newMas[index] = e.target.value as countriesType;
     setCountrys(newMas);
