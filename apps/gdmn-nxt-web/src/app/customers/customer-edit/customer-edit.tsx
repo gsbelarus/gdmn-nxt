@@ -14,7 +14,12 @@ import {
   Box,
   Slide,
   Typography,
-  Tab
+  Tab,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent
 } from '@mui/material';
 import {
   Theme
@@ -39,6 +44,7 @@ import { useGetBusinessProcessesQuery } from '../../features/business-processes'
 import ContactPersonList from '../contact-person-list/contact-person-list';
 import CustomizedDialog from '../../components/Styled/customized-dialog/customized-dialog';
 import TextFieldMasked from '../../components/textField-masked/textField-masked';
+import { countries, countriesType, getNumberMask } from '../../numberMask';
 
 const useStyles = makeStyles((theme: Theme) => ({
   dialog: {
@@ -190,6 +196,12 @@ export function CustomerEdit(props: CustomerEditProps) {
     />
   , [confirmOpen, deleting]);
 
+  const [country, setCountry] = useState<countriesType>('Belarus');
+
+  const changeCountry = (e: SelectChangeEvent) => {
+    setCountry(e.target.value as countriesType);
+  };
+
   return (
     <CustomizedDialog
       open={open}
@@ -256,7 +268,7 @@ export function CustomerEdit(props: CustomerEditProps) {
                           fullWidth
                         />
                         <TextFieldMasked
-                          mask={'+375 (99) 999-99-99'}
+                          mask={getNumberMask(country)}
                           fullWidth
                           name="PHONE"
                           label="Телефон"
@@ -265,6 +277,18 @@ export function CustomerEdit(props: CustomerEditProps) {
                           error={formik.touched.PHONE && Boolean(formik.errors.PHONE)}
                           helperText={formik.touched.PHONE && formik.errors.PHONE}
                         />
+                        <FormControl style={{ width: '200px' }}>
+                          <InputLabel id={'country'}>Страна</InputLabel>
+                          <Select
+                            defaultValue={countries[0]}
+                            value={country}
+                            labelId={'country'}
+                            label="Страна"
+                            onChange={changeCountry}
+                          >
+                            {countries.map((item: countriesType, index: number) => <MenuItem key={index} value={item}>{item}</MenuItem>)}
+                          </Select>
+                        </FormControl>
                       </Stack>
                       <TextField
                         label="Адрес"

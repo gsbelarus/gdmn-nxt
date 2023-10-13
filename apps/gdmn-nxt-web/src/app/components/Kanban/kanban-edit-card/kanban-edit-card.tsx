@@ -22,7 +22,12 @@ import {
   useTheme,
   Tooltip,
   StepButton,
-  LinearProgress
+  LinearProgress,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  FormControl
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -58,6 +63,7 @@ import { DealDocuments } from './components/deal-documents';
 import { ClientHistory } from './components/client-history';
 import ArrowCircleLeftOutlinedIcon from '@mui/icons-material/ArrowCircleLeftOutlined';
 import ArrowCircleRightOutlinedIcon from '@mui/icons-material/ArrowCircleRightOutlined';
+import { countries, countriesType, getNumberMask } from '../../../numberMask';
 
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -297,6 +303,12 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
     (formik.values.TASKS?.reduce((acc, task) => acc + Number(!task.USR$CLOSED), 0) || 0) > 0
   , [formik.values.DEAL?.USR$DONE, formik.values.TASKS]);
 
+  const [country, setCountry] = useState<countriesType>('Belarus');
+
+  const changeCountry = (e: SelectChangeEvent) => {
+    setCountry(e.target.value as countriesType);
+  };
+
   const KanbanRequestInfo = useMemo(() => {
     return (
       <Stack
@@ -371,7 +383,7 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
             helperText={getIn(formik.touched, 'DEAL.CONTACT_EMAIL') && getIn(formik.errors, 'DEAL.CONTACT_EMAIL')}
           />
           <TextFieldMasked
-            mask={'+375 (99) 999-99-99'}
+            mask={getNumberMask(country)}
             label="Телефон"
             type="text"
             fullWidth
@@ -381,10 +393,22 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
             error={getIn(formik.touched, 'DEAL.CONTACT_PHONE') && Boolean(getIn(formik.errors, 'DEAL.CONTACT_PHONE'))}
             helperText={getIn(formik.touched, 'DEAL.CONTACT_PHONE') && getIn(formik.errors, 'DEAL.CONTACT_PHONE')}
           />
+          <FormControl style={{ width: '200px' }}>
+            <InputLabel id={'country'}>Страна</InputLabel>
+            <Select
+              defaultValue={countries[0]}
+              value={country}
+              labelId={'country'}
+              label="Страна"
+              onChange={changeCountry}
+            >
+              {countries.map((item: countriesType, index: number) => <MenuItem key={index} value={item}>{item}</MenuItem>)}
+            </Select>
+          </FormControl>
         </Stack>
       </Stack>
     );
-  }, [formik.values, formik.touched, formik.errors]);
+  }, [formik.values, formik.touched, formik.errors, country]);
 
 
   const memoConfirmDialog = useMemo(() =>
@@ -424,7 +448,7 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
                   alignItems={'center'}
                   justifyContent={'center'}
                   spacing={2}
-                >
+                  >
                   <IconButton
                     color="primary"
                     onClick={handleStepBack}
@@ -454,7 +478,7 @@ export function KanbanEditCard(props: KanbanEditCardProps) {
                   activeStep={stages.findIndex(stage => stage.ID === formik.values.USR$MASTERKEY)}
                   alternativeLabel
                   nonLinear
-                >
+                  >
                   {stages.map((stage, idx) =>
                     <Step
                       key={stage.ID}

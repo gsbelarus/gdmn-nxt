@@ -10,7 +10,12 @@ import {
   Slide,
   Stack,
   TextField,
-  Box
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent
 } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
 import { makeStyles } from '@mui/styles';
@@ -28,6 +33,7 @@ import 'react-perfect-scrollbar/dist/css/styles.css';
 import CustomizedDialog from '../../components/Styled/customized-dialog/customized-dialog';
 import { AnyObject } from 'yup/lib/types';
 import TextFieldMasked from '../../components/textField-masked/textField-masked';
+import { countries, countriesType, getNumberMask } from '../../numberMask';
 
 const useStyles = makeStyles((theme) => ({
   dialogContent: {
@@ -200,6 +206,14 @@ export function PersonEdit(props: PersonEditProps) {
     setConfirmOpen(false);
   }, []);
 
+  const [countrys, setCountrys] = useState<countriesType[]>([]);
+
+  const changeCountrys = (index: number) => (e: SelectChangeEvent) => {
+    const newMas: countriesType[] = countrys;
+    newMas[index] = e.target.value as countriesType;
+    setCountrys(newMas);
+  };
+
   return (
     <CustomizedDialog
       open={open}
@@ -238,44 +252,75 @@ export function PersonEdit(props: PersonEditProps) {
                     onChange={formik.handleChange}
                     value={formik.values.EMAIL}
                   />
-                  <TextFieldMasked
-                    mask={'+375 (99) 999-99-99'}
-                    label="Телефон 1"
-                    name="PHONES[0]"
-                    value={formik.values.PHONES?.length ? formik.values.PHONES[0].USR$PHONENUMBER : ''}
-                    onChange={(e) => {
-                      handlePhoneChange(0, e.target.value);
-                    }}
-                    helperText={(() => {
-                      const isTouched = Array.isArray(formik.errors.PHONES) && Boolean((formik.touched.PHONES as unknown as IPhone[])?.[0]?.USR$PHONENUMBER);
-                      const error = Array.isArray(formik.errors.PHONES) && (formik.errors.PHONES[0] as unknown as IPhone)?.USR$PHONENUMBER;
-                      return isTouched ? error : '';
-                    })()}
-                    error={(() => {
-                      const isTouched = Array.isArray(formik.errors.PHONES) && Boolean((formik.touched.PHONES as unknown as IPhone[])?.[0]?.USR$PHONENUMBER);
-                      const error = Array.isArray(formik.errors.PHONES) && (formik.errors.PHONES[0] as unknown as IPhone)?.USR$PHONENUMBER;
-                      return isTouched && Boolean(error);
-                    })()}
-                  />
+                  <div style={{ display: 'flex', width: '100%' }}>
+                    <TextFieldMasked
+                      style={{ width: '100%', marginRight: '20px' }}
+                      mask={getNumberMask(countrys[0] || 'Belarus')}
+                      label="Телефон 1"
+                      name="PHONES[0]"
+                      value={formik.values.PHONES?.length ? formik.values.PHONES[0].USR$PHONENUMBER : ''}
+                      onChange={(e) => {
+                        handlePhoneChange(0, e.target.value);
+                      }}
+                      helperText={(() => {
+                        const isTouched = Array.isArray(formik.errors.PHONES) && Boolean((formik.touched.PHONES as unknown as IPhone[])?.[0]?.USR$PHONENUMBER);
+                        const error = Array.isArray(formik.errors.PHONES) && (formik.errors.PHONES[0] as unknown as IPhone)?.USR$PHONENUMBER;
+                        return isTouched ? error : '';
+                      })()}
+                      error={(() => {
+                        const isTouched = Array.isArray(formik.errors.PHONES) && Boolean((formik.touched.PHONES as unknown as IPhone[])?.[0]?.USR$PHONENUMBER);
+                        const error = Array.isArray(formik.errors.PHONES) && (formik.errors.PHONES[0] as unknown as IPhone)?.USR$PHONENUMBER;
+                        return isTouched && Boolean(error);
+                      })()}
+                    />
+                    <FormControl style={{ width: '200px' }}>
+                      <InputLabel id={'country'}>Страна</InputLabel>
+                      <Select
+                        defaultValue={countries[0]}
+                        value={countrys[0]}
+                        labelId={'country'}
+                        label="Страна"
+                        onChange={changeCountrys(0)}
+                      >
+                        {countries.map((item: countriesType, index: number) => <MenuItem key={index} value={item}>{item}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </div>
+
                   {phones.slice(1)
                     .map((phone, index, { length }) => {
                       const isTouched = Array.isArray(formik.errors.PHONES) && Boolean((formik.touched.PHONES as unknown as IPhone[])?.[index + 1]?.USR$PHONENUMBER);
                       const error = Array.isArray(formik.errors.PHONES) && (formik.errors.PHONES[index + 1] as unknown as IPhone)?.USR$PHONENUMBER;
 
                       return (
-                        <TextFieldMasked
-                          mask={'+375 (99) 999-99-99'}
-                          key={index}
-                          label={`Телефон ${index + 2}`}
-                          type="tel"
-                          name={`PHONE${index + 2}`}
-                          value={phone.USR$PHONENUMBER}
-                          onChange={(e) => {
-                            handlePhoneChange(index + 1, e.target.value);
-                          }}
-                          error={isTouched && Boolean(error)}
-                          helperText={isTouched && error}
-                        />);
+                        <div style={{ display: 'flex', width: '100%' }} key={index}>
+                          <TextFieldMasked
+                            mask={getNumberMask(countrys[index + 1] || 'Belarus')}
+                            style={{ width: '100%', marginRight: '20px' }}
+                            label={`Телефон ${index + 2}`}
+                            type="tel"
+                            name={`PHONE${index + 2}`}
+                            value={phone.USR$PHONENUMBER}
+                            onChange={(e) => {
+                              handlePhoneChange(index + 1, e.target.value);
+                            }}
+                            error={isTouched && Boolean(error)}
+                            helperText={isTouched && error}
+                          />
+                          <FormControl style={{ width: '200px' }}>
+                            <InputLabel id={'country'}>Страна</InputLabel>
+                            <Select
+                              defaultValue={countries[0]}
+                              value={countrys[index + 1]}
+                              labelId={'country'}
+                              label="Страна"
+                              onChange={changeCountrys(index + 1)}
+                            >
+                              {countries.map((item: countriesType, index: number) => <MenuItem key={index} value={item}>{item}</MenuItem>)}
+                            </Select>
+                          </FormControl>
+                        </div>
+                      );
                     })}
                   <div>
                     <Button
