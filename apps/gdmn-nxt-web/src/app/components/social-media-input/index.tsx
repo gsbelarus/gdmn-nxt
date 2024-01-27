@@ -2,7 +2,8 @@ import { Divider, InputAdornment, Stack, TextField, TextFieldProps } from '@mui/
 import React, { FocusEvent, useRef, useState } from 'react';
 import SocialMediaButton from './components/social-media-button/social-media-button';
 import SocialMediaMenu from './components/social-media-menu/social-media-menu';
-import { IIconsNames } from './social-media-icons';
+import { MessengerCode } from '@gsbelarus/util-api-types';
+import { socialMediaIcons } from './social-media-icons';
 export * from './social-media-icons';
 
 type BaseTextFieldProps = Omit<
@@ -12,7 +13,8 @@ type BaseTextFieldProps = Omit<
 
 export interface ISocialMedia {
     text: string;
-    name: IIconsNames
+    name: MessengerCode;
+    link?: string
 }
 
 export interface socialMediaInputProps extends BaseTextFieldProps {
@@ -67,9 +69,9 @@ export function SocialMediaInput(props: socialMediaInputProps) {
     setAnchorEl(null);
   };
 
-  const handleSocialChange = (socialValue: string) => {
+  const handleSocialChange = (socialValue: MessengerCode) => {
     handleClose();
-    onChange({ ...value, name: socialValue as IIconsNames });
+    onChange({ ...value, name: socialValue, link: socialMediaIcons[`${socialValue as MessengerCode}`].link });
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

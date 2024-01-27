@@ -1,11 +1,12 @@
 import { Box, Menu, MenuProps } from '@mui/material';
 import styles from './social-media-menu.module.less';
 import SocialMediaMenuItem from '../social-media-item/social-media-menu-item';
-import { IIconsNames, socialMediaIcons } from '../../social-media-icons';
+import { socialMediaIcons } from '../../social-media-icons';
+import { MessengerCode } from '@gsbelarus/util-api-types';
 
 export interface SocialMediaMenuProps extends Partial<MenuProps> {
-  socialName: IIconsNames | undefined;
-  onChangeSocial: (value: string) => void;
+  socialName: MessengerCode | undefined;
+  onChangeSocial: (value: MessengerCode) => void;
 }
 
 export function SocialMediaMenu(props: SocialMediaMenuProps) {
@@ -28,7 +29,7 @@ export function SocialMediaMenu(props: SocialMediaMenuProps) {
           <SocialMediaMenuItem
             onSelectSocial={onChangeSocial}
             key={index}
-            socialName={socialNameItem as IIconsNames}
+            socialName={socialNameItem as MessengerCode}
             selected={socialNameItem === socialName}
           />
         )}

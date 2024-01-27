@@ -1,10 +1,11 @@
 import { MenuItem, MenuItemProps, Typography } from '@mui/material';
 import { Styled } from './styled';
-import { IIconsNames, socialMediaIcons } from '../../social-media-icons';
+import { socialMediaIcons } from '../../social-media-icons';
+import { MessengerCode } from '@gsbelarus/util-api-types';
 
 export interface SocialMediaMenuItemProps extends MenuItemProps {
-  socialName: IIconsNames;
-  onSelectSocial: (isoCode: string) => void;
+  socialName: MessengerCode;
+  onSelectSocial: (isoCode: MessengerCode) => void;
 }
 
 export function SocialMediaMenuItem(props: SocialMediaMenuItemProps) {
@@ -16,7 +17,7 @@ export function SocialMediaMenuItem(props: SocialMediaMenuItemProps) {
 
   const handleClick = (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
     event.preventDefault();
-    onSelectSocial(socialName as IIconsNames);
+    onSelectSocial(socialName as MessengerCode);
   };
 
   return (
@@ -27,7 +28,7 @@ export function SocialMediaMenuItem(props: SocialMediaMenuItemProps) {
       data-testid={`option-${socialName}`}
     >
       <Styled.ListItemIcon>
-        <img style={{ width: '30px' }} src={socialMediaIcons[socialName]}/>
+        <img style={{ width: '30px' }} src={socialMediaIcons[socialName].icon}/>
       </Styled.ListItemIcon>
       <Styled.ListItemText>
         {socialName}

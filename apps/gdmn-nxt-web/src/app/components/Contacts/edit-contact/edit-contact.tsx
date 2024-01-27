@@ -319,7 +319,7 @@ export function EditContact({
               spacing={1}
               flex={1}
             >
-              <img src={socialMediaIcons[CODE]} width={17} />
+              <img src={socialMediaIcons[CODE].icon} width={17} />
               <EditableTypography
                 value={USERNAME}
                 width={'100%'}

@@ -179,7 +179,7 @@ export interface IEmail extends IWithID {
   EMAIL: string;
 }
 
-type MessengerCode = 'facebook'
+export type MessengerCode = 'facebook'
 | 'instagram'
 | 'telegram'
 | 'viber'
@@ -188,7 +188,8 @@ type MessengerCode = 'facebook'
 | 'ok'
 | 'whatsApp'
 | 'github'
-| 'vk';
+| 'vk'
+| 'discord';
 
 export interface IMessenger extends IWithID {
   USR$CONTACTKEY?: number;
