@@ -17,6 +17,7 @@ import CustomizedDialog from '@gdmn-nxt/components/Styled/customized-dialog/cust
 import ConfirmDialog from '../../../confirm-dialog/confirm-dialog';
 import { ContactsSelect } from './contacts-select';
 import { IContactPerson } from '@gsbelarus/util-api-types';
+import { useUpdateContactPersonMutation } from '../../../features/contact/contactApi';
 
 const useStyles = makeStyles((theme: Theme) => ({
   dialog: {
