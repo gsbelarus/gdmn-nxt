@@ -1,5 +1,5 @@
 import { IContactPerson, ICustomer } from '@gsbelarus/util-api-types';
-import { Autocomplete, AutocompleteRenderOptionState, Box, Button, Checkbox, IconButton, TextField, TextFieldProps } from '@mui/material';
+import { Autocomplete, AutocompleteRenderOptionState, Box, Button, Checkbox, IconButton, TextField, TextFieldProps, createFilterOptions } from '@mui/material';
 import { useGetCustomersQuery } from 'apps/gdmn-nxt-web/src/app/features/customer/customerApi_new';
 import { HTMLAttributes, useCallback, useMemo, useState } from 'react';
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
@@ -127,9 +127,16 @@ export function ContactsSelect<Multiple extends boolean | undefined = false>(pro
       <Button
         startIcon={<AddCircleRoundedIcon />}
         onClick={handleAddPerson}
-      >Создать клиента</Button>
+      >Создать Контакт</Button>
     </div>,
   []);
+
+  const filterOptions = createFilterOptions({
+    matchFrom: 'any',
+    limit: 50,
+    ignoreCase: true,
+    stringify: (option: IContactPerson) => `${option.NAME} ${option.ID}`,
+  });
 
   return (
     <>
@@ -138,6 +145,7 @@ export function ContactsSelect<Multiple extends boolean | undefined = false>(pro
         fullWidth
         multiple={multiple}
         limitTags={2}
+        filterOptions={filterOptions}
         PaperComponent={CustomPaperComponent({ footer: memoPaperFooter })}
         getOptionLabel={useCallback((option: IContactPerson) => option.NAME, [])}
         loading={customersIsFetching || insertIsLoading}
@@ -184,8 +192,8 @@ export function ContactsSelect<Multiple extends boolean | undefined = false>(pro
         }, [])}
         renderInput={useCallback((params) => (
           <TextField
-            label="Клиент"
-            placeholder={`${insertIsLoading ? 'Создание...' : 'Выберите клиента'}`}
+            label="Контакт"
+            placeholder={`${insertIsLoading ? 'Создание...' : 'Выберите Контакт'}`}
             {...params}
             {...rest}
             InputProps={{

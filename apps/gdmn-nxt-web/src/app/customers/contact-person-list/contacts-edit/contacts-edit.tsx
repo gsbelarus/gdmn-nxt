@@ -120,7 +120,7 @@ export function ContactsEdit(props: CustomerEditProps) {
           <Stack
             direction="column"
             spacing={2}
-            style={{ flex: 1, display: 'flex' }}
+            style={{ flex: 1, display: 'flex', padding: '10px' }}
           >
             <ContactsSelect
               onCancelClick={onCancelClick}
@@ -136,7 +136,7 @@ export function ContactsEdit(props: CustomerEditProps) {
       <DialogActions>
         <Button
           className={classes.button}
-          onClick={() => {}}
+          onClick={onCancelClick}
           variant="outlined"
           color="primary"
         >

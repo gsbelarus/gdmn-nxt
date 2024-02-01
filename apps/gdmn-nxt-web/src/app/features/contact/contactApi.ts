@@ -29,10 +29,12 @@ export const contactApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: baseUrlApi, credentials: 'include' }),
   endpoints: (builder) => ({
     getAllContacts: builder.query<IContactRequestResult, void>({
-      query: () => 'contacts'
+      query: () => 'contacts',
+      providesTags: result => ['Persons']
     }),
     getContactByTaxId: builder.query<IContactRequestResult, { taxId: string }>({
-      query: ({ taxId }) => `contacts/taxId/${taxId}`
+      query: ({ taxId }) => `contacts/taxId/${taxId}`,
+      providesTags: result => ['Persons']
     }),
     getContactPersons: builder.query<{ records: IContactPerson[], count: number }, Partial<IQueryOptions> | void>({
       query: (options) => {
@@ -97,7 +99,7 @@ export const contactApi = createApi({
         };
       },
       transformResponse: (response: IContactPersonsRequestResult) => response.queries?.persons[0] || null,
-      // invalidatesTags: [{ type: 'Persons', id: 'LIST' }],
+      invalidatesTags: [{ type: 'Persons', id: 'LIST' }],
       async onQueryStarted({ ID, ...patch }, { dispatch, queryFulfilled }) {
         try {
           const { data: addedContact } = await queryFulfilled;
@@ -125,11 +127,11 @@ export const contactApi = createApi({
         body
       }),
       transformResponse: (response: IContactPersonsRequestResult) => response.queries.persons[0] || null,
-      // invalidatesTags: (result, error, arg) => {
-      //   return result
-      //     ? [{ type: 'Persons', id: arg.ID }, { type: 'Persons', id: 'LIST' }]
-      //     : ['Persons'];
-      // },
+      invalidatesTags: (result, error, arg) => {
+        return result
+          ? [{ type: 'Persons', id: arg.ID }, { type: 'Persons', id: 'LIST' }]
+          : ['Persons'];
+      },
       async onQueryStarted(newContact, { dispatch, queryFulfilled }) {
         cachedOptions?.forEach(async opt => {
           const options = Object.keys(opt).length > 0 ? opt : undefined;
@@ -157,12 +159,12 @@ export const contactApi = createApi({
         method: 'DELETE'
       }),
       transformResponse: (response: IContactPersonsRequestResult) => response.queries.persons[0] || null,
-      // invalidatesTags: (result, error, arg) =>
-      //   result
-      //     ? [{ type: 'Persons', id: 'LIST' }]
-      //     : error
-      //       ? [{ type: 'Persons', id: 'ERROR' }]
-      //       : [{ type: 'Persons', id: 'LIST' }],
+      invalidatesTags: (result, error, arg) =>
+        result
+          ? [{ type: 'Persons', id: 'LIST' }]
+          : error
+            ? [{ type: 'Persons', id: 'ERROR' }]
+            : [{ type: 'Persons', id: 'LIST' }],
       async onQueryStarted(id, { dispatch, queryFulfilled }) {
         cachedOptions?.forEach(async opt => {
           const options = Object.keys(opt).length > 0 ? opt : undefined;
