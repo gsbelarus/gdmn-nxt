@@ -10,13 +10,15 @@ import StyledGrid from '../../components/Styled/styled-grid/styled-grid';
 import CustomLoadingButton from '@gdmn-nxt/components/helpers/custom-loading-button/custom-loading-button';
 import EditContact from '@gdmn-nxt/components/Contacts/edit-contact/edit-contact';
 import AddContact from '@gdmn-nxt/components/Contacts/add-contact/add-contact';
+import ContactsEdit from './contacts-edit/contacts-edit';
 
 export interface ContactPersonListProps {
+  customerName: string,
   customerId: number;
 }
 
 export function ContactPersonList(props: ContactPersonListProps) {
-  const { customerId } = props;
+  const { customerId, customerName } = props;
 
   const {
     data: persons,
@@ -47,8 +49,14 @@ export function ContactPersonList(props: ContactPersonListProps) {
     setUpsertContact({ editContact: false, addContact: false });
   };
 
-  const handleAddPerson = () => {
-    setUpsertContact({ addContact: true, contact: { ID: -1, NAME: '', COMPANY: { ID: customerId, NAME: '' } } });
+  const [addPersonOpen, setAddPersonOpen] = useState<boolean>(false);
+
+  const handleAddPersonOpen = () => {
+    setAddPersonOpen(true);
+  };
+
+  const handleAddPersonClose = () => {
+    setAddPersonOpen(false);
   };
 
   const columns: GridColDef[] = [
@@ -137,6 +145,13 @@ export function ContactPersonList(props: ContactPersonListProps) {
     />,
   [upsertContact.addContact, upsertContact.contact]);
 
+  const memoContactsEdit = useMemo(() => <ContactsEdit
+    customerId={customerId}
+    customerName={customerName}
+    open={addPersonOpen}
+    onCancelClick={handleAddPersonClose}
+  />, [addPersonOpen]);
+
   return (
     <Stack direction="column" flex={1}>
       <Stack direction="row">
@@ -148,7 +163,7 @@ export function ContactPersonList(props: ContactPersonListProps) {
         />
         <IconButton
           color="primary"
-          onClick={handleAddPerson}
+          onClick={handleAddPersonOpen}
           disabled={(customerId <= 0) || personsIsFetching}
         >
           <AddCircleRoundedIcon />
@@ -176,6 +191,7 @@ export function ContactPersonList(props: ContactPersonListProps) {
       {/* {memUpsertPerson} */}
       {memoEditContact}
       {memoAddContact}
+      {memoContactsEdit}
     </Stack>
   );
 }

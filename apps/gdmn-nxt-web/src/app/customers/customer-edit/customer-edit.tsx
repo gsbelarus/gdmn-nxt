@@ -186,7 +186,7 @@ export function CustomerEdit(props: CustomerEditProps) {
   };
 
   const memoContactlist = useMemo(() =>
-    <ContactPersonList customerId={customer?.ID || -1} />,
+    <ContactPersonList customerId={customer?.ID || -1} customerName={customer?.NAME || ''} />,
   [customer?.ID]);
 
   const memoConfirmDialog = useMemo(() =>
