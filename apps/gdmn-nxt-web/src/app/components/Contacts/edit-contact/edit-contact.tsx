@@ -294,16 +294,18 @@ export function EditContact({
                 width={'100%'}
                 deleteable
                 onDelete={() => handleDeleteEmail(index)}
-                editComponent={
-                  <TextField
+                editComponent={(onClose) => {
+                  return (<TextField
                     fullWidth
                     autoFocus
+                    onBlur={onClose}
                     name={`EMAIL${index}`}
                     value={EMAIL ?? ''}
                     onChange={(e) => handleEmailChange(index, e.target.value)}
                     error={isTouched && Boolean(error)}
                     helperText={isTouched && error}
-                  />
+                  />);
+                }
                 }
               />
             </a>

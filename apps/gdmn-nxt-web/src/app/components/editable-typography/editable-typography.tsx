@@ -9,7 +9,7 @@ import { KeyboardEvent, createElement, useMemo, useState } from 'react';
 export interface EditableTypographyProps extends TypographyProps {
   name?: string;
   value: string;
-  editComponent?: React.ReactNode;
+  editComponent?: ((closeFun: () => void) => React.ReactNode) | React.ReactNode;
   deleteable?: boolean;
   onDelete?: () => void;
 }
@@ -37,6 +37,11 @@ export const EditableTypography = styled(({
 
       },
       editComponent);
+    }
+    if (typeof editComponent === 'function') {
+      return editComponent(() => {
+        setEditText(false);
+      });
     }
     return editComponent;
   }, [editComponent]);
