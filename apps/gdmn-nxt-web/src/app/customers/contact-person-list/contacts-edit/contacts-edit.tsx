@@ -64,6 +64,7 @@ export interface CustomerEditProps {
 export function ContactsEdit(props: CustomerEditProps) {
   const { open, onCancelClick, customerId, customerName } = props;
 
+
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const classes = useStyles();
@@ -71,6 +72,12 @@ export function ContactsEdit(props: CustomerEditProps) {
   const [updatePerson, isFetching] = useUpdateContactPersonMutation();
 
   const [contacts, setContacts] = useState<IContactPerson[] | undefined>([]);
+
+  const handleCanselClick = () => {
+    setContacts([]);
+    onCancelClick();
+  };
+
   const handleConfirmOkClick = useCallback(async () => {
     if (!contacts) return;
     setConfirmOpen(false);
@@ -136,7 +143,7 @@ export function ContactsEdit(props: CustomerEditProps) {
       <DialogActions>
         <Button
           className={classes.button}
-          onClick={onCancelClick}
+          onClick={handleCanselClick}
           variant="outlined"
           color="primary"
         >
