@@ -285,30 +285,28 @@ export function EditContact({
             spacing={2}
           >
             <EmailIcon fontSize="small" color="primary" />
-            <a
-              className={styles.link}
-              href={`mailto:${EMAIL}`}
-            >
-              <EditableTypography
-                value={EMAIL}
-                width={'100%'}
-                deleteable
-                onDelete={() => handleDeleteEmail(index)}
-                editComponent={(onClose) => {
-                  return (<TextField
-                    fullWidth
-                    autoFocus
-                    onBlur={onClose}
-                    name={`EMAIL${index}`}
-                    value={EMAIL ?? ''}
-                    onChange={(e) => handleEmailChange(index, e.target.value)}
-                    error={isTouched && Boolean(error)}
-                    helperText={isTouched && error}
-                  />);
-                }
-                }
-              />
-            </a>
+
+            <EditableTypography
+              value={EMAIL}
+              width={'100%'}
+              deleteable
+              deleteNull
+              link={`mailto:${EMAIL}`}
+              onDelete={() => handleDeleteEmail(index)}
+              editComponent={(onClose) => {
+                return (<TextField
+                  fullWidth
+                  autoFocus
+                  onBlur={onClose}
+                  name={`EMAIL${index}`}
+                  value={EMAIL ?? ''}
+                  onChange={(e) => handleEmailChange(index, e.target.value)}
+                  error={isTouched && Boolean(error)}
+                  helperText={isTouched && error}
+                />);
+              }
+              }
+            />
           </Stack>
         );
       })}

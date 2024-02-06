@@ -11,6 +11,8 @@ export interface EditableTypographyProps extends TypographyProps {
   value: string;
   editComponent?: ((closeFun: () => void) => React.ReactNode) | React.ReactNode;
   deleteable?: boolean;
+  deleteNull?: boolean,
+  link?: string,
   onDelete?: () => void;
 }
 
@@ -21,6 +23,8 @@ export const EditableTypography = styled(({
   onChange,
   editComponent,
   deleteable = false,
+  deleteNull = false,
+  link,
   ...props
 }: EditableTypographyProps) => {
   const [editText, setEditText] = useState(!value);
@@ -40,7 +44,7 @@ export const EditableTypography = styled(({
     }
     if (typeof editComponent === 'function') {
       return editComponent(() => {
-        setEditText(false);
+        onClose();
       });
     }
     return editComponent;
@@ -51,9 +55,16 @@ export const EditableTypography = styled(({
     setEditText(true);
   };
 
-  const onClose = (e: any) => {
-    e.preventDefault();
+  const onClose = () => {
+    if (value.trim().length === 0 && deleteNull) {
+      onDelete && onDelete();
+    }
     setEditText(false);
+  };
+
+  const handleClose = (e: any) => {
+    e.preventDefault();
+    onClose();
   };
 
   const handleDelete = (e: any) => {
@@ -62,8 +73,26 @@ export const EditableTypography = styled(({
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    e.key === 'Escape' && onClose(e);
+    e.key === 'Escape' && handleClose(e);
   };
+
+  const editElementComponent = editText
+    ? editElement ??
+  <TextField
+    variant="standard"
+    value={value}
+    name={name}
+    fullWidth
+    onChange={onChange}
+  />
+    : <Typography
+      {...props}
+      className={styles['title']}
+      autoFocus
+      >
+      {value}
+    </Typography>;
+
 
   return (
     <div
@@ -71,29 +100,20 @@ export const EditableTypography = styled(({
       className={styles['container']}
       onKeyDown={onKeyDown}
     >
-      {editText
-        ? editElement ??
-          <TextField
-            variant="standard"
-            value={value}
-            name={name}
-            fullWidth
-            onChange={onChange}
-          />
-        : <Typography
-          {...props}
-          className={styles['title']}
-          autoFocus
+      {(link && !editText) ?
+        <a
+          className={styles.link}
+          href={link}
         >
-          {value}
-        </Typography>
-      }
+          {editElementComponent}
+        </a>
+        : editElementComponent}
       <div
         className={`${styles['actions']} ${editText ? styles['visible'] : styles['hidden']}`}
       >
         {editText
           ? <Tooltip arrow title="Закрыть окно редактирования">
-            <IconButton size="small" onClick={onClose}>
+            <IconButton size="small" onClick={handleClose}>
               <CloseIcon fontSize="small" color="primary" />
             </IconButton >
           </Tooltip>
