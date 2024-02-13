@@ -2,7 +2,7 @@ import { Box, Menu, MenuProps } from '@mui/material';
 import { DEFAULT_LANG } from '../../constants';
 import { ISO_CODES, TelInputCountry } from '../../constants/countries';
 import { FlagSize } from '../../types';
-import { useMemo } from 'react';
+import { MutableRefObject, useMemo } from 'react';
 import FlagMenuItem from '../flag-menu-item/flag-menu-item';
 import CustomizedScrollBox from '@gdmn-nxt/components/Styled/customized-scroll-box/customized-scroll-box';
 import styles from './flag-menu.module.less';
@@ -24,6 +24,7 @@ export interface FlagMenuProps extends Partial<MenuProps> {
   onlyCountries?: TelInputCountry[];
   flagSize?: FlagSize;
   onSelectCountry: (isoCode: TelInputCountry) => void;
+  popupRef?: MutableRefObject<any>
 }
 
 export function FlagMenu(props: FlagMenuProps) {
@@ -34,6 +35,7 @@ export function FlagMenu(props: FlagMenuProps) {
     onSelectCountry,
     onlyCountries = [],
     flagSize = 'small',
+    popupRef,
     ...rest
   } = props;
 
@@ -68,7 +70,7 @@ export function FlagMenu(props: FlagMenuProps) {
       }}
       {...rest}
     >
-      <Box className={styles.menuContent}>
+      <Box ref={popupRef} className={styles.menuContent}>
         <CustomizedScrollBox>
           {countriesFiltered.map((isoCodeItem) =>
             <FlagMenuItem

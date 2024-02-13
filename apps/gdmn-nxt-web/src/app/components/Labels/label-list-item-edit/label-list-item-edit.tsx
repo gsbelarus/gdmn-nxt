@@ -114,7 +114,7 @@ export function LabelListItemEdit(props: LabelListItemEditProps) {
 
   const handleOnClose = useCallback(() => onCancelClick(), [onCancelClick]);
 
-  const [ref] = useOutsideClick(selectColor, () => setSelectColor(false));
+  const [ref] = useOutsideClick(selectColor, [], () => setSelectColor(false));
 
   const changeIcon = (iconName: string) => {
     formik.setFieldValue('USR$ICON', iconName);

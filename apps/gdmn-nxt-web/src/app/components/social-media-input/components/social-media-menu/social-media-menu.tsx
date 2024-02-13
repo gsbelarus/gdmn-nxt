@@ -1,12 +1,23 @@
-import { Box, Menu, MenuProps } from '@mui/material';
+import { Box, Menu, MenuProps, Theme } from '@mui/material';
 import styles from './social-media-menu.module.less';
 import SocialMediaMenuItem from '../social-media-item/social-media-menu-item';
 import { IIconsNames, socialMediaIcons } from '../../social-media-icons';
+import { MutableRefObject } from 'react';
+import { makeStyles } from '@mui/styles';
 
 export interface SocialMediaMenuProps extends Partial<MenuProps> {
   socialName: IIconsNames | undefined;
   onChangeSocial: (value: string) => void;
+  popupRef?: MutableRefObject<any>
 }
+
+const useStyles = makeStyles((theme: Theme) => ({
+  popup: {
+    '& .MuiList-root': {
+      padding: '0px !important'
+    }
+  }
+}));
 
 export function SocialMediaMenu(props: SocialMediaMenuProps) {
   const {
@@ -14,16 +25,20 @@ export function SocialMediaMenu(props: SocialMediaMenuProps) {
     anchorEl,
     socialName,
     onChangeSocial,
+    popupRef,
     ...rest
   } = props;
 
+  const classes = useStyles();
+
   return (
     <Menu
+      className={classes.popup}
       anchorEl={anchorEl}
       open={Boolean(anchorEl)}
       {...rest}
     >
-      <Box className={styles.menuContent}>
+      <Box className={styles.menuContent} ref={popupRef}>
         {Object.keys(socialMediaIcons).map((socialNameItem, index) =>
           <SocialMediaMenuItem
             onSelectSocial={onChangeSocial}

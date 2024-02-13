@@ -1,5 +1,5 @@
 import { Divider, InputAdornment, Stack, TextField, TextFieldProps } from '@mui/material';
-import React, { FocusEvent, useRef, useState } from 'react';
+import React, { FocusEvent, MutableRefObject, useRef, useState } from 'react';
 import SocialMediaButton from './components/social-media-button/social-media-button';
 import SocialMediaMenu from './components/social-media-menu/social-media-menu';
 import { IIconsNames } from './social-media-icons';
@@ -20,6 +20,7 @@ export interface socialMediaInputProps extends BaseTextFieldProps {
   onChange: (value: ISocialMedia) => void;
   value: ISocialMedia;
   disableDropdown?: boolean;
+  popupRef?: MutableRefObject<any>
 }
 
 export function SocialMediaInput(props: socialMediaInputProps) {
@@ -33,6 +34,7 @@ export function SocialMediaInput(props: socialMediaInputProps) {
     inputProps,
     InputProps,
     className,
+    popupRef,
     ...restTextFieldProps
   } = props;
 
@@ -112,6 +114,7 @@ export function SocialMediaInput(props: socialMediaInputProps) {
       />
       {!disableDropdown ? (
         <SocialMediaMenu
+          popupRef={popupRef}
           anchorEl={anchorEl}
           socialName={value.name}
           onClose={handleClose}

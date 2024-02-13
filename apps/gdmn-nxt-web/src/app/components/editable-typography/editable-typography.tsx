@@ -4,12 +4,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconButton, TextField, Tooltip, Typography, TypographyProps, styled } from '@mui/material';
 import styles from './editable-typography.module.less';
-import { KeyboardEvent, createElement, useMemo, useState } from 'react';
+import { KeyboardEvent, MutableRefObject, createElement, useEffect, useMemo, useState } from 'react';
+import { useOutsideClick } from '../../features/common/useOutsideClick';
 
 export interface EditableTypographyProps extends TypographyProps {
   name?: string;
   value: string;
-  editComponent?: ((closeFun: () => void) => React.ReactNode) | React.ReactNode;
+  editComponent?: ((popupRef: MutableRefObject<any>) => React.ReactNode) | React.ReactNode;
   deleteable?: boolean;
   deleteNull?: boolean,
   link?: string,
@@ -28,6 +29,18 @@ export const EditableTypography = styled(({
   ...props
 }: EditableTypographyProps) => {
   const [editText, setEditText] = useState(!value);
+  const [isOpen, setIsOpen] = useState(false);
+  const [current, setCurrent] = useState('');
+  useEffect(() => {
+    setCurrent(value);
+    if (editText) {
+      setIsOpen(true);
+    }
+  }, [editText, value]);
+
+  const [ref, secondRef] = useOutsideClick(isOpen, [value], () => {
+    onClose();
+  });
 
   const editElement = useMemo(() => {
     if (typeof editComponent === 'object' && editComponent && 'props' in editComponent) {
@@ -43,9 +56,7 @@ export const EditableTypography = styled(({
       editComponent);
     }
     if (typeof editComponent === 'function') {
-      return editComponent(() => {
-        onClose();
-      });
+      return editComponent(secondRef);
     }
     return editComponent;
   }, [editComponent]);
@@ -59,6 +70,7 @@ export const EditableTypography = styled(({
     if (value.trim().length === 0 && deleteNull) {
       onDelete && onDelete();
     }
+    setIsOpen(false);
     setEditText(false);
   };
 
@@ -76,7 +88,7 @@ export const EditableTypography = styled(({
     e.key === 'Escape' && handleClose(e);
   };
 
-  const editElementComponent = editText
+  const editElementComponent = <div ref={ref}>{editText
     ? editElement ??
   <TextField
     variant="standard"
@@ -91,8 +103,9 @@ export const EditableTypography = styled(({
       autoFocus
       >
       {value}
-    </Typography>;
-
+    </Typography>
+  }
+  </div>;
 
   return (
     <div

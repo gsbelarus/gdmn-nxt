@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-function useOutsideClick(isOpened: boolean, close: () => void) {
+function useOutsideClick(isOpened: boolean, willUpdate: any[], close: () => void) {
   const ref = useRef<any>();
   const secondRef = useRef<any>();
   const handleClick = (e: any) => {
@@ -16,7 +16,7 @@ function useOutsideClick(isOpened: boolean, close: () => void) {
         document.removeEventListener('click', handleClick);
       };
     }
-  }, [isOpened]);
+  }, [isOpened].concat(willUpdate));
 
   return [ref, secondRef];
 }

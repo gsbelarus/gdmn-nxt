@@ -241,12 +241,12 @@ export function EditContact({
               onDelete={() => handleDeletePhone(index)}
               deleteNull
               link={`tel:${USR$PHONENUMBER.replace(/\s+/g, '')}`}
-              editComponent={(onClose) => {
+              editComponent={(popupRef) => {
                 return (<TelephoneInput
+                  popupRef={popupRef}
                   name={`PHONE${index}`}
                   autoFocus
                   value={USR$PHONENUMBER ?? ''}
-                  onBlur={onClose}
                   onChange={(value) => handlePhoneChange(index, value)}
                   fixedCode
                   strictMode
@@ -295,7 +295,6 @@ export function EditContact({
                 return (<TextField
                   fullWidth
                   autoFocus
-                  onBlur={onClose}
                   name={`EMAIL${index}`}
                   value={EMAIL ?? ''}
                   onChange={(e) => handleEmailChange(index, e.target.value)}
@@ -357,13 +356,13 @@ export function EditContact({
                 onDelete={() => handleDeleteMessenger(index)}
                 deleteNull
                 link={`${socialMediaLinks[CODE]}${USERNAME}`}
-                editComponent={(onClose) => {
+                editComponent={(popupRef) => {
                   return (<SocialMediaInput
+                    popupRef={popupRef}
                     value={{
                       name: CODE,
                       text: USERNAME
                     }}
-                    onBlur={onClose}
                     name={`MESSANGER${index}`}
                     autoFocus
                     // label={`Мессенджер ${index === 0 ? '' : (index + 1)}`}

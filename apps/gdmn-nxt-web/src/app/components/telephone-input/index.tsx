@@ -1,7 +1,7 @@
 import { InputAdornment, TextField, TextFieldProps } from '@mui/material';
 import { DEFAULT_ISO_CODE, TelInputCountry } from './constants/countries';
 import UseDigits from './hooks/useDigits';
-import React, { FocusEvent, useRef, useState } from 'react';
+import React, { FocusEvent, MutableRefObject, useRef, useState } from 'react';
 import FlagButton from './components/flag-button/flag-button';
 import { FlagSize, TelInputInfo } from './types';
 import FlagMenu from './components/flag-menu/flag-menu';
@@ -27,6 +27,7 @@ export interface TelephoneInputProps extends BaseTextFieldProps {
   onlyCountries?: TelInputCountry[];
   disableDropdown?: boolean;
   disableFormatting?: boolean;
+  popupRef?: MutableRefObject<any>;
   flagSize?: FlagSize;
    /**
    * Если true, то код страны будет недоступен для ручного изменения
@@ -56,6 +57,7 @@ export function TelephoneInput(props: TelephoneInputProps) {
     flagSize = 'small',
     className,
     fixedCode = false,
+    popupRef,
     strictMode,
     ...restTextFieldProps
   } = props;
@@ -155,6 +157,7 @@ export function TelephoneInput(props: TelephoneInputProps) {
       />
       {!disableDropdown ? (
         <FlagMenu
+          popupRef={popupRef}
           anchorEl={anchorEl}
           onlyCountries={onlyCountries}
           isoCode={isoCode}
