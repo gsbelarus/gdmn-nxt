@@ -33,12 +33,13 @@ export function SocialMediaMenu(props: SocialMediaMenuProps) {
 
   return (
     <Menu
+      ref={popupRef}
       className={classes.popup}
       anchorEl={anchorEl}
       open={Boolean(anchorEl)}
       {...rest}
     >
-      <Box className={styles.menuContent} ref={popupRef}>
+      <Box className={styles.menuContent} >
         {Object.keys(socialMediaIcons).map((socialNameItem, index) =>
           <SocialMediaMenuItem
             onSelectSocial={onChangeSocial}

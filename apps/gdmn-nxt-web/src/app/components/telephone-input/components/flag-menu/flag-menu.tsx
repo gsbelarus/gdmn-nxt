@@ -68,9 +68,10 @@ export function FlagMenu(props: FlagMenuProps) {
         'aria-activedescendant': isoCode ? `country-${isoCode}` : '',
         'aria-labelledby': 'select-country'
       }}
+      ref={popupRef}
       {...rest}
     >
-      <Box ref={popupRef} className={styles.menuContent}>
+      <Box className={styles.menuContent}>
         <CustomizedScrollBox>
           {countriesFiltered.map((isoCodeItem) =>
             <FlagMenuItem
