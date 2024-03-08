@@ -1,4 +1,4 @@
-import { ICustomer, ICustomerCross, IRequestResult } from '@gsbelarus/util-api-types';
+import { ICustomer, ICustomerCross, IRequestResult, queryOptionsToParamsString } from '@gsbelarus/util-api-types';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseUrlApi } from '../../const';
 
@@ -48,37 +48,12 @@ export const customerApi = createApi({
     }),
     getCustomers: builder.query<{data: ICustomer[], count?: number}, Partial<IQueryOptions> | void>({
       query(options) {
-        const params: string[] = [];
         lastOptions = { ...options };
 
-        for (const [name, value] of Object.entries(options || {})) {
-          switch (true) {
-            case typeof value === 'object' && value !== null:
-              for (const [subName, subKey] of Object.entries(value)) {
-                const subParams = [];
-                if (typeof subKey === 'object' && subKey !== null) {
-                  for (const [subNameNested, subKeyNested] of Object.entries(subKey)) {
-                    if (typeof subKeyNested === 'object' && subKeyNested !== null) {
-                      subParams.push((subKeyNested as any).ID);
-                    };
-                    if (typeof subKeyNested === 'string') {
-                      subParams.push(subKeyNested);
-                    };
-                  }
-                } else {
-                  subParams.push(subKey);
-                };
-                params.push(`${subName}=${subParams}`);
-              };
-              break;
+        const params = queryOptionsToParamsString(options);
 
-            default:
-              params.push(`${name}=${value}`);
-              break;
-          }
-        };
         return {
-          url: `contacts?${params.join('&')}`,
+          url: `contacts?${params ? `?${params}` : ''}`,
           method: 'GET',
         };
       },
@@ -139,7 +114,9 @@ export const customerApi = createApi({
               if (draft.count) draft.count += 1;
             })
           );
-        } catch {}
+        } catch (error) {
+          console.error('[ error ]', error);
+        }
       },
     }),
     deleteCustomer: builder.mutation<{id: number}, number>({

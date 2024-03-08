@@ -35,8 +35,10 @@ const appPort =
 const apiAccessToken = process.env.ACCESS_API_TOKEN || '';
 const jwtSecret = process.env.JWT_SECRET || '';
 
-// const origin = `https://${host}:${appPort}`;
-const origin = `https://${host}`;
+const origin = process.env.NODE_ENV === 'production'
+  ? `https://${host}`
+  : `https://${host}:${appPort}`;
+
 
 export const config: IConfig = {
   host,

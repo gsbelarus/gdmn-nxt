@@ -3,6 +3,9 @@ import { resultError } from '../../responseMessages';
 import { contractsRepository } from '@gdmn-nxt/repositories/contracts/contracts';
 import { cacheManager } from '@gdmn-nxt/cache-manager';
 import { IContract } from '@gsbelarus/util-api-types';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+dayjs.extend(isBetween);
 
 export const getAll: RequestHandler = async(req, res) => {
   const contractType = parseInt(req.params.contractType);
@@ -19,7 +22,10 @@ export const getAll: RequestHandler = async(req, res) => {
     const { field: sortField = 'NAME', sort: sortMode = 'ASC' } = req.query;
     /** Filtering */
     const customerId = parseInt(req.query.companyId as string);
-    const { name } = req.query;
+    const { name, customers, dateRange, isActive } = req.query;
+    const customerIds = customers ? (customers as string).split(',').map(Number) ?? [] : [];
+    const activeOnly = (isActive as string)?.toLowerCase() === 'true';
+    const period = dateRange ? (dateRange as string).split(',') : [];
 
     let fromRecord = 0;
     let toRecord: number;
@@ -46,6 +52,21 @@ export const getAll: RequestHandler = async(req, res) => {
             contract.NUMBER?.toLowerCase().includes(lowerName) ||
             contract.customer.NAME?.toLowerCase().includes(lowerName)
           );
+        }
+
+        if (customerIds.length > 0) {
+          checkConditions = checkConditions &&
+            customerIds?.includes(contract.customer.ID);
+        }
+
+        if (period.length > 0) {
+          checkConditions = checkConditions &&
+            dayjs(contract.DATEEND).isBetween(period[0], period[1], 'day', '[]');
+        }
+
+        if (activeOnly) {
+          checkConditions = checkConditions &&
+            contract.ISACTIVE;
         }
 
         if (checkConditions) {

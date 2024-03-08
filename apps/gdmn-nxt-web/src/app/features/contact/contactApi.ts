@@ -1,4 +1,4 @@
-import { IBaseContact, IRequestResult, IWithID, IContactWithID, IContactPerson, IEmployee, IQueryOptions, IFavoriteContact } from '@gsbelarus/util-api-types';
+import { IBaseContact, IRequestResult, IWithID, IContactWithID, IContactPerson, IEmployee, IQueryOptions, IFavoriteContact, queryOptionsToParamsString } from '@gsbelarus/util-api-types';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseUrlApi } from '../../const';
 
@@ -43,37 +43,10 @@ export const contactApi = createApi({
           cachedOptions.push(lastOptions);
         }
 
-        const params: string[] = [];
-
-        for (const [name, value] of Object.entries(options || {})) {
-          switch (true) {
-            case typeof value === 'object' && value !== null:
-              for (const [subName, subKey] of Object.entries(value)) {
-                const subParams = [];
-                if (typeof subKey === 'object' && subKey !== null) {
-                  for (const [subNameNested, subKeyNested] of Object.entries(subKey)) {
-                    if (typeof subKeyNested === 'object' && subKeyNested !== null) {
-                      subParams.push((subKeyNested as any).ID);
-                    };
-                    if (typeof subKeyNested === 'string') {
-                      subParams.push(subKeyNested);
-                    };
-                  }
-                } else {
-                  subParams.push(subKey);
-                };
-                params.push(`${subName}=${subParams}`);
-              };
-              break;
-
-            default:
-              params.push(`${name}=${value}`);
-              break;
-          }
-        };
+        const params = queryOptionsToParamsString(options);
 
         return {
-          url: `contacts/persons${params.length > 0 ? `?${params.join('&')}` : ''}`,
+          url: `contacts/persons${params ? `?${params}` : ''}`,
           method: 'GET'
         };
       },

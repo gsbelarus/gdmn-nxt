@@ -5,7 +5,7 @@ import SearchBar from '@gdmn-nxt/components/search-bar/search-bar';
 import { Box, CardContent, CardHeader, Divider, Stack, Typography } from '@mui/material';
 import usePermissions from '@gdmn-nxt/components/helpers/hooks/usePermissions';
 import { useGetContractsListQuery } from '../../../features/contracts-list/contractsListApi';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import StyledGrid from '@gdmn-nxt/components/Styled/styled-grid/styled-grid';
 import { columns } from './columns';
 import useSystemSettings from '@gdmn-nxt/components/helpers/hooks/useSystemSettings';
@@ -17,6 +17,7 @@ import { RootState } from '../../../store';
 import { saveFilterData } from '../../../store/filtersSlice';
 import DetailContent from './detail-content';
 import CustomFilterButton from '@gdmn-nxt/components/helpers/custom-filter-button';
+import { ContractsFilter } from '@gdmn-nxt/components/contracts/contracts-filter';
 
 export interface ContractsProps {}
 
@@ -104,6 +105,15 @@ export function Contracts(props: ContractsProps) {
 
   const getDetailPanelContent = useCallback(({ row }: GridRowParams<IContract>) => <DetailContent row={row} />, []);
 
+  const memoFilter = useMemo(() =>
+    <ContractsFilter
+      open={openFilters}
+      onClose={filterHandlers.filterClose}
+      filteringData={filterData}
+      onFilteringDataChange={handleFilteringDataChange}
+    />,
+  [openFilters, filterData]);
+
   return (
     <CustomizedCard style={{ flex: 1 }}>
       <CardHeader
@@ -143,8 +153,7 @@ export function Contracts(props: ContractsProps) {
             <Box display="inline-flex" alignSelf="center">
               <CustomFilterButton
                 onClick={filterHandlers.filterClick}
-                // disabled={contractsIsFetching}
-                disabled
+                disabled={contractsIsFetching}
                 hasFilters={Object.keys(filterData || {}).filter(f => f !== 'name').length > 0}
               />
             </Box>
@@ -170,6 +179,7 @@ export function Contracts(props: ContractsProps) {
           getDetailPanelContent={getDetailPanelContent}
         />
       </CardContent>
+      {memoFilter}
     </CustomizedCard>
   );
 };
