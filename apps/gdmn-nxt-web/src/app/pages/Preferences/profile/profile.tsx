@@ -30,16 +30,15 @@ export function Profile(props: ProfileProps) {
   const { isLoading } = useGetProfileSettingsQuery(userProfile?.id ?? -1);
 
   const location = useLocation();
-  const tabDefault = location.pathname.split('/').at(-1) as TabIndex ?? 'account';
-  const [tabIndex, setTabIndex] = useState<TabIndex>(tabDefault);
-  useEffect(() => {
-    setTabIndex(tabDefault as TabIndex);
-  }, [tabDefault]);
-
+  const [tabIndex, setTabIndex] = useState<TabIndex>(TABS[0]);
 
   const handleTabsChange = (event: any, newindex: TabIndex) => {
     setTabIndex(newindex);
   };
+
+  useEffect(() => {
+    setTabIndex(TABS[Number(window.location.search.replace('?tab=', '') || '0')]);
+  }, [window]);
 
   return (
     <CustomizedCard className={styles.mainCard}>
@@ -51,28 +50,28 @@ export function Profile(props: ProfileProps) {
             <LinkTab
               label="Профиль"
               value="account"
-              href="/employee/system/settings/account"
+              href="/employee/system/settings"
               icon={<PersonIcon />}
               iconPosition="start"
             />
             <LinkTab
               label="Безопасность"
               value="security"
-              href="/employee/system/settings/security"
+              href="/employee/system/settings?tab=1"
               icon={<ShieldIcon />}
               iconPosition="start"
             />
             <LinkTab
               label="Уведомления"
               value="notifications"
-              href="/employee/system/settings/notifications"
+              href="/employee/system/settings?tab=2"
               icon={<NotificationsIcon />}
               iconPosition="start"
             />
             <LinkTab
               label="Система"
               value="system"
-              href="/employee/system/settings/system"
+              href="/employee/system/settings?tab=3"
               className={!userPermissions?.system?.forGroup ? styles.tabHeaderHide : ''}
               icon={<SettingsSuggestIcon />}
               iconPosition="start"

@@ -132,16 +132,7 @@ const Main = () => {
                             <Route path="salesfunnel" element={<SalesFunnel />} />
                           </Route>
                           <Route path="system">
-                            <Route path="settings">
-                              <Route path="" element={<Navigate to="account" />} />
-                              {TABS.map((tab) => (
-                                <Route
-                                  key={tab}
-                                  path={tab}
-                                  element={<Profile />}
-                                />
-                              ))}
-                            </Route>
+                            <Route path="settings" element={<Profile />} />
                             <Route path="permissions">
                               <Route path="" element={<Navigate to="list" />} />
                               <Route path="list" element={<PermissionsList />} />

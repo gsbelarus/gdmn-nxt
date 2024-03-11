@@ -15,7 +15,7 @@ const preferences: IMenuItem = {
       id: 'settings',
       title: 'Настройки',
       type: 'item',
-      url: 'system/settings/account',
+      url: 'system/settings',
       icon: <Settings color="secondary" />
     },
     {
